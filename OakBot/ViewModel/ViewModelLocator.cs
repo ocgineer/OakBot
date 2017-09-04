@@ -47,9 +47,11 @@ namespace OakBot.ViewModel
                 SimpleIoc.Default.Register<IBinFileService, BinFileService>();
             }
 
-            // Register ViewModels
+            // Register ViewModels instanciated on use by a View
             SimpleIoc.Default.Register<MainViewModel>();
-            SimpleIoc.Default.Register<ExampleViewModel>();
+
+            // Register ViewModels create instance Immediately as no view is using them yet
+            SimpleIoc.Default.Register<ExampleViewModel>(true);
         }
 
         public MainViewModel Main

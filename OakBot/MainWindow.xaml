@@ -125,23 +125,9 @@
                     <ComboBox Margin="10,0,0,10" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="95" ItemsSource="{Binding ChatAccounts}" SelectedItem="{Binding SelectedAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsBotConnected, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </TabItem>
-            <TabItem Header="Giveaways" IsEnabled="{Binding Path=Main.IsBotConnected}">
-                <Grid Background="#FFE5E5E5" DataContext="{Binding Giveaway}">
-                    <TabControl x:Name="GiveawayModules" Margin="10" ItemsSource="{Binding GiveawayModules}">
-                        <TabControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding ID, Mode=OneWay, StringFormat=Giveaway \{0:D\}}" Height="16"/>
-                            </DataTemplate>
-                        </TabControl.ItemTemplate>
-                        <TabControl.ContentTemplate>
-                            <DataTemplate>
-                                <Grid Background="#FFE5E5E5">
-                                    <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="23" Margin="153,79,0,0" TextWrapping="Wrap" Text="{Binding Keyword}" VerticalAlignment="Top" Width="120"/>
-                                </Grid>
-                            </DataTemplate>
-                        </TabControl.ContentTemplate>
-                    </TabControl>
-                </Grid>
+            <TabItem Header="Giveaways" IsEnabled="False">
+                
+ 
             </TabItem>
         </TabControl>
 

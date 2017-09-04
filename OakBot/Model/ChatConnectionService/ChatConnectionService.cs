@@ -48,6 +48,8 @@ namespace OakBot.Model
             _tcc2.Authentication += _tcc_Authentication;
             _tcc1.ChatMessageReceived += _tcc_ChatMessageReceived;
             _tcc2.ChatMessageReceived += _tcc_ChatMessageReceived;
+            _tcc1.RawMessageReceived += _tcc_RawMessageReceived;
+            _tcc2.RawMessageReceived += _tcc_RawMessageReceived;
         }
 
         #endregion
@@ -134,6 +136,21 @@ namespace OakBot.Model
             }
 
             OnChatMessageReceived(e.ClientCredentials, e.ChatMessage);
+        }
+
+        private void _tcc_RawMessageReceived(object sender, TwitchChatMessageReceivedEventArgs e)
+        {            
+            // Caster received message
+            if (e.ClientCredentials.IsCaster)
+            {
+                // Return on anything but the 'bot' messages for loopback
+                if (e.ChatMessage.Author != _botaccount.Username)
+                {
+                    return;
+                }
+            }
+
+            OnRawMessageReceived(e.ClientCredentials, e.ChatMessage);
         }
 
         private void _tcc_Connected(object sender, TwitchChatConnectedEventArgs e)
