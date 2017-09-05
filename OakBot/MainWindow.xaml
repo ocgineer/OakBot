@@ -110,7 +110,7 @@
                             <DataGridTemplateColumn Header="Name" Width="120" IsReadOnly="True">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding DisplayName}" Foreground="{Binding NameColor}"/>
+                                        <TextBlock Text="{Binding DisplayName}" Foreground="{Binding Color}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

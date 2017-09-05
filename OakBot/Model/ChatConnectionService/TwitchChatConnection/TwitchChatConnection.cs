@@ -167,7 +167,7 @@ namespace OakBot.Model
         private void _tcpClient_MessageReceived(object sender, TcpMessageReceivedEventArgs e)
         {
             // Create a TwitchMessage from the received message
-            TwitchChatMessage twitchMsg = new TwitchChatMessage(e.RawMessage, _credentials.Username);
+            TwitchChatMessage twitchMsg = new TwitchChatMessage(e.RawMessage);
 
             OnRawMessageReceived(twitchMsg);
             
@@ -197,7 +197,7 @@ namespace OakBot.Model
 
                 // Received 376, last message of the MOTD after authentication
                 // Used to assume successful authentication to the Twitch IRC
-                case IrcCommand.RPL_376:
+                case IrcCommand.RPL_001:
                     OnAuthentication(true);
                     break;
 
@@ -213,7 +213,10 @@ namespace OakBot.Model
                     {
                         // Authentication failed
                         // Invoke the authentication event with a failed authentication status
-                        case NoticeMsgId.AuthFailed:
+                        case NoticeMessageType.AuthBadFormat:
+                            OnAuthentication(false);
+                            break;
+                        case NoticeMessageType.AuthLoginFailed:
                             OnAuthentication(false);
                             break;
                     }

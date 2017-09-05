@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
+
+using GalaSoft.MvvmLight.Messaging;
 
 using OakBot.Model;
 
@@ -15,7 +18,10 @@ namespace OakBot.ViewModel
 
         public ExampleViewModel(IChatConnectionService chat, IBinFileService bin)
         {
-            // Set ref to services
+            // Register to the shutdown notification
+            Messenger.Default.Register<NotificationMessage>(this, "shutdown", (msg) => { _vm_OnShutdown(); });
+
+            // Set refferences to services
             _chat = chat; // Twitch chat service
             _bin = bin;   // Load/Save VM settings .bin files
 
@@ -23,9 +29,20 @@ namespace OakBot.ViewModel
             _chat.RawMessageReceived += _chat_RawMessageReceived;
         }
 
+        /// <summary>
+        /// Raw Message received event handler, fired on every IRC message received.
+        /// </summary>
         private void _chat_RawMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
-            Console.WriteLine(e.ChatMessage.RawMessage);
+            //
+        }
+
+        /// <summary>
+        /// Shutdown message handler, handle shutdown.
+        /// </summary>
+        private void _vm_OnShutdown()
+        {
+            //
         }
     }
 }

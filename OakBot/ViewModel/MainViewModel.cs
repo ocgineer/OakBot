@@ -200,14 +200,13 @@ namespace OakBot.ViewModel
             AddChatMessage(e.ChatMessage);
 
             // Broadcast received message for other VM
-            Messenger.Default.Send<TwitchChatMessage>(e.ChatMessage);
+            Messenger.Default.Send<TwitchChatMessage>(e.ChatMessage, "chatmessage");
         }
 
         private void _ccs_Connected(object sender, ChatConnectionConnectedEventArgs e)
         {
             AddChatMessage(new TwitchChatMessage(
                     string.Format("{0} is successfully connected to chat server. Authenticating now.", e.Account.Username),
-                    "oakbot",
                     "OakBot")
             );
         }
@@ -243,7 +242,7 @@ namespace OakBot.ViewModel
                 // Add success message in console
                 AddChatMessage(new TwitchChatMessage(
                     string.Format("{0} successfully authenticated, have fun!", e.Account.Username),
-                    "oakbot", "Oakbot")
+                    "Oakbot")
                 );
             }
             else
@@ -251,7 +250,7 @@ namespace OakBot.ViewModel
                 // Add failure message in console
                 AddChatMessage(new TwitchChatMessage(
                     string.Format("{0} failed to authenticate, please relink with Twitch!", e.Account.Username),
-                    "oakbot", "Oakbot")
+                    "Oakbot")
                 );
             }
         }
@@ -285,7 +284,7 @@ namespace OakBot.ViewModel
             // Add disconnection message to console
             AddChatMessage(new TwitchChatMessage(
                 string.Format("{0} disconnected from the chat.", e.Account.Username),
-                "oakbot", "OakBot"));
+                "OakBot"));
         }
 
         #endregion
@@ -307,11 +306,16 @@ namespace OakBot.ViewModel
                                 "OakBot - Shutdown Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
                             if (res == MessageBoxResult.Yes)
                             {
+                                // Disconnect caster
                                 if (IsCasterConnected)
                                     _ccs.Disconnect(true);
 
+                                // Disconnect bot
                                 if (IsBotConnected)
                                     _ccs.Disconnect(false);
+
+                                // Send a shutting down message
+                                Messenger.Default.Send(new NotificationMessage("User initiated shutdown."), "shutdown");
 
                                 // Continue shutting down
                                 args.Cancel = false;
@@ -330,7 +334,7 @@ namespace OakBot.ViewModel
 
         #region Authentication and Chat Connect Properties
 
-        private string _channelName;
+        private string _channelName = string.Empty;
         public string ChannelName
         {
             get
@@ -351,7 +355,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        private string _botUsername;
+        private string _botUsername = string.Empty;
         public string BotUsername
         {
             get
@@ -372,7 +376,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        private bool _isBotOauthSet = false;
+        private bool _isBotOauthSet;
         public bool IsBotOauthSet
         {
             get
@@ -415,7 +419,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        private string _casterUsername;
+        private string _casterUsername = string.Empty;
         public string CasterUsername
         {
             get
@@ -436,7 +440,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        private bool _isCasterOauthSet = false;
+        private bool _isCasterOauthSet;
         public bool IsCasterOauthSet
         {
             get
