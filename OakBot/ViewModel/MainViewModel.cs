@@ -75,6 +75,7 @@ namespace OakBot.ViewModel
                 ChannelName = _mainSettings.Channel;
                 BotUsername = _mainSettings.BotUsername;
                 CasterUsername = _mainSettings.CasterUsername;
+                IsUsingSSL = _mainSettings.UseSecureConnection;
 
                 // Set bot credentials
                 if (!string.IsNullOrWhiteSpace(_mainSettings.BotOauthKey))
@@ -480,6 +481,26 @@ namespace OakBot.ViewModel
                                 Regex.IsMatch(CasterUsername, @"^[a-z0-9][a-z0-9_]{3,24}$"));
                         }
                     ));
+            }
+        }
+
+        private bool _isUsingSSL;
+        public bool IsUsingSSL
+        {
+            get
+            {
+                return _isUsingSSL;
+            }
+            set
+            {
+                if (value != _isUsingSSL)
+                {
+                    _isUsingSSL = value;
+                    RaisePropertyChanged();
+
+                    _mainSettings.UseSecureConnection = value;
+                    OnSettingsChanged();
+                }
             }
         }
 
