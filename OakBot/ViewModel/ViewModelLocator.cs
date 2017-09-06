@@ -41,7 +41,6 @@ namespace OakBot.ViewModel
             else
             {
                 // Create run time view services and models
-                SimpleIoc.Default.Register<IAuthenticationService, AuthenticationService>();
                 SimpleIoc.Default.Register<IChatConnectionService, ChatConnectionService>();
                 SimpleIoc.Default.Register<IWebSocketEventService, WebSocketEventService>();
                 SimpleIoc.Default.Register<IBinFileService, BinFileService>();

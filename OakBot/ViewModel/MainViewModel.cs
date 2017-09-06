@@ -24,7 +24,6 @@ namespace OakBot.ViewModel
         private readonly IChatConnectionService _ccs;
         private readonly IWebSocketEventService _wse;
         private readonly IBinFileService _bfh;
-        private readonly IAuthenticationService _auths;
 
         private MainSettings _mainSettings;
 
@@ -38,16 +37,14 @@ namespace OakBot.ViewModel
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
-        public MainViewModel(IChatConnectionService ccs, IBinFileService bfh,
-            IWebSocketEventService wse, IAuthenticationService auths)
+        public MainViewModel(IChatConnectionService ccs, IBinFileService bfh, IWebSocketEventService wse)
         {          
-            Title = "OakBot - Giveaway Bot";
+            Title = "OakBot - YATB";
 
             // Set dependency injection references
             _ccs = ccs;
             _wse = wse;
             _bfh = bfh;
-            _auths = auths;
 
             // Initialize collections
             _chatAccounts = new ObservableCollection<ITwitchAccount>();
@@ -62,7 +59,7 @@ namespace OakBot.ViewModel
             _wse.SetApiToken("oakbotapitest");
 
             // Load settings if available
-            var loadedSettings = (MainSettings)_bfh.ReadBinFile("LoginSettings");
+            var loadedSettings = (MainSettings)_bfh.ReadEncryptedBinFile("LoginSettings");
             if (loadedSettings == null)
             {
                 // Settings file does not exist yet
@@ -102,8 +99,8 @@ namespace OakBot.ViewModel
 
         private void OnSettingsChanged()
         {
-            _bfh.WriteBinFile("LoginSettings", _mainSettings);
-            _ccs.SetJoiningChannel(_mainSettings.Channel, false);
+            _bfh.WriteEncryptedBinFile("LoginSettings", _mainSettings);
+            _ccs.SetJoiningChannel(_mainSettings.Channel, _isUsingSSL);
         }
 
         private void AddChatMessage(TwitchChatMessage tcm)
@@ -400,7 +397,7 @@ namespace OakBot.ViewModel
                     (_cmdAuthBot = new RelayCommand(
                         () =>
                         {
-                            string res = _auths.AuthenticateTwitch(BotUsername, true);
+                            string res = Authentication.AuthenticateTwitch(BotUsername, true);
                             if (res != null)
                             {
                                 _mainSettings.BotOauthKey = res;
@@ -464,7 +461,7 @@ namespace OakBot.ViewModel
                     (_cmdAuthCaster = new RelayCommand(
                         () =>
                         {
-                            string res = _auths.AuthenticateTwitch(CasterUsername, false);
+                            string res = Authentication.AuthenticateTwitch(CasterUsername, false);
                             if (res != null)
                             {
                                 _mainSettings.CasterOauthKey = res;

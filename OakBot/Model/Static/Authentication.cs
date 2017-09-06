@@ -1,8 +1,9 @@
-﻿namespace OakBot.Model
+﻿
+namespace OakBot.Model
 {
-    public class AuthenticationService : IAuthenticationService
+    public static class Authentication
     {
-        public string AuthenticateTwitch(string username, bool isBot)
+        public static string AuthenticateTwitch(string username, bool isBot)
         {
             var authwindow = new AuthenticationWindow(username, isBot);
             if (authwindow.ShowDialog() == true)

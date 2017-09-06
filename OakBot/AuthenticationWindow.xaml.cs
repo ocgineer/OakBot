@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Reflection;
 using System.Windows.Navigation;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -64,24 +65,26 @@ namespace OakBot
             // Navigate
             if (isBot)
             {
-                wbAuth.Navigate(TwitchAuthBot);
+                AuthWebBrowser.Navigate(TwitchAuthBot);
             }
             else
             {
-                wbAuth.Navigate(TwitchAuthStreamer);
+                AuthWebBrowser.Navigate(TwitchAuthStreamer);
             }  
         }
 
         #endregion
 
-        private void wbAuth_LoadCompleted(object sender, NavigationEventArgs e)
+        #region Event Handlers
+
+        private void AuthWebBrowser_LoadCompleted(object sender, NavigationEventArgs e)
         {
             // If the loaded URI is the login page from Twitch then we can fill
             // the given Twitch Username in the username input field and lock it.
             // This forces users to fill in the correct username beforehand.
             if (e.Uri.Host == "passport.twitch.tv")
             {
-                HTMLDocument doc = (HTMLDocument)wbAuth.Document;
+                HTMLDocument doc = (HTMLDocument)AuthWebBrowser.Document;
 
                 // Hide SignUp tab
                 IHTMLElement signUp = doc.getElementById("signup_tab");
@@ -98,7 +101,17 @@ namespace OakBot
             }
         }
 
-        private void wbAuth_Navigated(object sender, NavigationEventArgs e)
+        private void AuthWebBrowser_Navigating(object sender, NavigatingCancelEventArgs e)
+        {
+            // Suppress script errors
+            dynamic activeX = AuthWebBrowser.GetType().InvokeMember("ActiveXInstance",
+                BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                null, AuthWebBrowser, new object[] { });
+
+            activeX.Silent = true;
+        }
+
+        private void AuthWebBrowser_Navigated(object sender, NavigationEventArgs e)
         {
             // If the WebBrowser is navigating to 'localhost' then this means we 
             // have received our Oauth token, and we can cancel navigating.
@@ -111,6 +124,10 @@ namespace OakBot
                 this.Close();
             }
         }
+
+        #endregion
+
+        #region Private Methods
 
         /// <summary>
         /// Returns the Twitch OAUTH token extracted from the redirected URL.
@@ -137,14 +154,6 @@ namespace OakBot
             return token.Groups["code"].Value;
         }
 
-        #region Properties
-
-        public string Oauth { get; private set; }
-
-        #endregion
-
-
-
         // Get reference to InternetSetOption Method from wininet.dll
         [DllImport("wininet.dll", SetLastError = true)]
         private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int lpdwBufferLength);
@@ -170,14 +179,22 @@ namespace OakBot
                         Suppresses the persistence of cookies, even if the server has specified them as persistent.
                         Version:  Requires Internet Explorer 8.0 or later.
             */
-        
+
             // Set INTERNET_OPTION_END_BROWSER_SESSION
             InternetSetOption(IntPtr.Zero, 42, IntPtr.Zero, 0);
-        
+
             // Set INTERNET_OPTION_SUPPRESS_BEHAVIOR
             // with INTERNET_SUPPRESS_COOKIE_PERSIST
             int suppressBehaviorOption = 3;
             InternetSetOption(IntPtr.Zero, 81, new IntPtr(&suppressBehaviorOption), sizeof(int));
         }
+
+        #endregion
+
+        #region Properties
+
+        public string Oauth { get; private set; }
+
+        #endregion
     }
 }
