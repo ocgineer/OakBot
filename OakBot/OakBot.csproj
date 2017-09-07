@@ -127,6 +127,8 @@
     </Compile>
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
     <Compile Include="ViewModel\ExampleViewModel.cs" />
+    <Compile Include="ViewModel\SubDB.cs" />
+    <Compile Include="ViewModel\SubWelcomeModel.cs" />
     <Compile Include="View\DataGridBehavior.cs" />
     <Compile Include="Model\BinFileService\BinFileService.cs" />
     <Compile Include="Model\BinFileService\IBinFileService.cs" />
