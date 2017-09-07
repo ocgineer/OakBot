@@ -59,7 +59,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        public void AddPerson(string username)
+        public void AddSub(string username)
         {
             lock (_lock)
             {
@@ -67,7 +67,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        public void RemovePerson(string username)
+        public void (string username)
         {
             lock (_lock)
             {

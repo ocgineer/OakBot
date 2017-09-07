@@ -61,7 +61,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        public SubWelcomeModel Example
+        public SubWelcomeModel SubWelcome
         {
             get
             {
