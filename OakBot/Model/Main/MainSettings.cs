@@ -13,6 +13,13 @@ namespace OakBot.Model
         public bool AutoConnectStartup { get; set; }
         public bool UseSecureConnection { get; set; }
 
-        public MainSettings() { }
+        public MainSettings()
+        {
+            // Required initialization because UI performs
+            // string manipulations on these variables.
+            Channel = string.Empty;
+            BotUsername = string.Empty;
+            CasterUsername = string.Empty;
+        }
     }
 }
