@@ -332,7 +332,7 @@ namespace OakBot.ViewModel
 
         #region Authentication and Chat Connect Properties
 
-        private string _channelName = string.Empty;
+        private string _channelName;
         public string ChannelName
         {
             get
@@ -353,7 +353,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        private string _botUsername = string.Empty;
+        private string _botUsername;
         public string BotUsername
         {
             get
@@ -417,7 +417,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        private string _casterUsername = string.Empty;
+        private string _casterUsername;
         public string CasterUsername
         {
             get

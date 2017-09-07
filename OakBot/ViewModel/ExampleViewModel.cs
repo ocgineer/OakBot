@@ -5,13 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 
 using OakBot.Model;
 
 namespace OakBot.ViewModel
 {
-    public class ExampleViewModel
+    public class ExampleViewModel : ViewModelBase
     {
         private IChatConnectionService _chat;
         private IBinFileService _bin;
