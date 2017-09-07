@@ -58,17 +58,17 @@ namespace OakBot.ViewModel
 
             _wse.SetApiToken("oakbotapitest");
 
-            // Load settings if available
-            var loadedSettings = (MainSettings)_bfh.ReadEncryptedBinFile("LoginSettings");
-            if (loadedSettings == null)
+            // Load settings
+            _mainSettings = (MainSettings)_bfh.ReadEncryptedBinFile("LoginSettings");
+            if (_mainSettings == null)
             {
-                // Settings file does not exist yet
+                // Settings file does not exist or reading file went wrong
+                // so we set startup with a clean settings template to use.
                 _mainSettings = new MainSettings();
             }
             else
             {
-                // Load settings to properties to trigger UI update
-                _mainSettings = loadedSettings;
+                // Set loaded settings values through properties for UI
                 ChannelName = _mainSettings.Channel;
                 BotUsername = _mainSettings.BotUsername;
                 CasterUsername = _mainSettings.CasterUsername;
