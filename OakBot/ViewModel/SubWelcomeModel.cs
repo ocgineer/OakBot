@@ -19,6 +19,8 @@ namespace OakBot.ViewModel
         
 
         private SubDB _subDB;
+
+        private string _prefix;
         
 
         public SubWelcomeModel(IChatConnectionService chat, IBinFileService bin)
@@ -36,6 +38,8 @@ namespace OakBot.ViewModel
             // Initialize private database
             _subDB = new SubDB();
 
+            _prefix = "";
+
             
         }
 
@@ -44,7 +48,30 @@ namespace OakBot.ViewModel
         /// </summary>
         private void _chat_RawMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
-            
+           
+
+            if (e.ChatMessage.Command == IrcCommand.UserNotice)
+            {
+                if (e.ChatMessage.NoticeType == NoticeMessageType.Sub)
+                {
+                    // Check if Sub 
+                }
+                if (e.ChatMessage.NoticeType == NoticeMessageType.Resub)
+                {
+                    // resub
+                }
+            }
+
+            // normal chat message
+            if (e.ChatMessage.Command == IrcCommand.PrivMsg)
+            {
+                // message content
+                string message = e.ChatMessage.Message;
+
+                // Add user to database
+                
+
+            }
         }
 
         /// <summary>
@@ -52,7 +79,7 @@ namespace OakBot.ViewModel
         /// </summary>
         private void _vm_OnShutdown()
         {
-            //
+            
         }
     }
 }

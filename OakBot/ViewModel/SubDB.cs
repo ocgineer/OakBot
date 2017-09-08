@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using System.Data.SQLite;
 using System.IO;
 
-using OakBot.Model;
 
 namespace OakBot.ViewModel
 {
@@ -50,6 +45,9 @@ namespace OakBot.ViewModel
                             "'New' TEXT," +
                             "PRIMARY KEY(UserId))", subDB);
                     sqlCmd.ExecuteNonQuery();
+                    
+
+                    
 
                 }
                 catch
@@ -59,7 +57,7 @@ namespace OakBot.ViewModel
             }
         }
 
-        public void AddSub(string username)
+        public void AddSub(string ID, string Name, string Tier)
         {
             lock (_lock)
             {
@@ -67,11 +65,27 @@ namespace OakBot.ViewModel
             }
         }
 
-        public void (string username)
+        public void UpdateSub(string ID, string Name, string Tier)
         {
             lock (_lock)
             {
                 // delete user by username, threading safe due to lock
+            }
+        }
+
+        public void GetSub(string ID)
+        {
+            lock (_lock)
+            {
+                // delete user by username, threading safe due to lock
+            }
+        }
+
+        public void CloseDB()
+        {
+            lock (_lock)
+            {
+                
             }
         }
     }
