@@ -5,10 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace OakBot.Utility
 {
-
     /// <typeparam name="T"> Class and newable type</typeparam>
 
     #region Attributes
@@ -593,3 +593,5 @@ namespace OakBot.Utility
 
     #endregion
 }
+
+
