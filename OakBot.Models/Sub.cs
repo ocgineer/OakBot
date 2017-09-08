@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace OakBot.Models
 {
-    public class Subs
+    public class Sub
     {
         [DbColumn(IsIdentity = true, IsPrimary = true)]
-        public long UserID { get; set; }
+        public string UserID { get; set; }
         [DbColumn]
         public string Name { get; set; }
         [DbColumn]
-        public string Tier { get; set; }
+        public int Tier { get; set; }
         [DbColumn]
-        public string New { get; set; }
+        public bool New { get; set; }
     }
 }

@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using GalaSoft.MvvmLight;
-
 using GalaSoft.MvvmLight.Messaging;
+
+using OakBot.Models;
+
 
 using OakBot.Model;
 
@@ -15,13 +17,13 @@ namespace OakBot.ViewModel
     public class SubWelcomeModel : ViewModelBase
     {
         private IChatConnectionService _chat;
-        private IBinFileService _bin;
-        
+        private IBinFileService _bin;        
 
-        private SubDB _subDB;
+        private SubDB _subDB = new SubDB();
 
-        private string _prefix;
-        
+        private Sub _sub = new Sub(); 
+
+        private string _prefix = "";
 
         public SubWelcomeModel(IChatConnectionService chat, IBinFileService bin)
         {
@@ -35,12 +37,8 @@ namespace OakBot.ViewModel
             // Register to events
             _chat.RawMessageReceived += _chat_RawMessageReceived;
 
-            // Initialize private database
-            _subDB = new SubDB();
-
-            _prefix = "";
-
-            
+                        
+                        
         }
 
         /// <summary>
@@ -54,23 +52,141 @@ namespace OakBot.ViewModel
             {
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Sub)
                 {
-                    // Check if Sub 
+                    // Check if in DB 
+                    _sub = _subDB.GetSub(e.ChatMessage.UserId);
+                    int tier;
+
+                    switch (e.ChatMessage.SubscriptionPlan)
+                    {
+                        case SubPlan.Prime:
+                        case SubPlan.Tier1:
+                            tier = 1000;
+                            break;
+
+                        case SubPlan.Tier2:
+                            tier = 2000;
+                            break;
+
+                        case SubPlan.Tier3:
+                            tier = 3000;
+                            break;
+
+                        default:
+                            tier = 1000;
+                            break;
+
+                    }
+
+                    if (_sub != null)
+                    {
+                        if (tier > _sub.Tier)
+                        {
+                            _prefix = "+";
+                        }
+                        else if (tier < _sub.Tier)
+                        {
+                            _prefix = "-";
+                        }
+                        else
+                        {
+                            _prefix = "";
+                        }
+
+                        Console.Write(_prefix + "Welcome Back " + _sub.Name + ", :Emotes: ");
+                    }
+
+                    else
+                    {
+                        _sub.UserID = e.ChatMessage.UserId;
+                        _sub.Name = e.ChatMessage.DisplayName;
+                        _sub.Tier = tier;
+
+                        if (tier == 3000)
+                        {
+                            _sub.New = true;
+                        }
+
+                        Console.Write(_prefix + "Welcome " + _sub.Name + ", :Emotes: ");
+
+                        _subDB.AddSub(_sub);
+                    }
+                
                 }
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Resub)
                 {
                     // resub
+
+                    // Check if in DB 
+                    _sub = _subDB.GetSub(e.ChatMessage.UserId);
+                    int tier;
+
+                    switch (e.ChatMessage.SubscriptionPlan)
+                    {
+                        case SubPlan.Prime:
+                        case SubPlan.Tier1:
+                            tier = 1000;
+                            break;
+
+                        case SubPlan.Tier2:
+                            tier = 2000;
+                            break;
+
+                        case SubPlan.Tier3:
+                            tier = 3000;
+                            break;
+
+                        default:
+                            tier = 1000;
+                            break;
+
+                    }
+
+                    if (_sub != null)
+                    {
+                        if (tier > _sub.Tier)
+                        {
+                            _prefix = "+";
+                        }
+                        else if (tier < _sub.Tier)
+                        {
+                            _prefix = "-";
+                        }
+                        else
+                        {
+                            _prefix = "";
+                        }
+
+                        Console.Write(_prefix + "Welcome " + _sub.Name + ", :Emotes: ");
+                    }
+
+                    else
+                    {
+                        _sub.UserID = e.ChatMessage.UserId;
+                        _sub.Name = e.ChatMessage.DisplayName;
+                        _sub.Tier = tier;
+
+                        if (tier == 3000)
+                        {
+                            _sub.New = true;
+                        }
+
+                        Console.Write(_prefix + "Welcome " + _sub.Name + ", :Emotes: ");
+
+                        _subDB.AddSub(_sub);
+                    }
                 }
             }
 
             // normal chat message
             if (e.ChatMessage.Command == IrcCommand.PrivMsg)
             {
+
+
                 // message content
-                string message = e.ChatMessage.Message;
+                _sub = _subDB.GetSub(e.ChatMessage.UserId);
 
-                // Add user to database
-                
-
+                Console.Write(_sub);
+                _chat.SendMessage(_sub.Name, false);
             }
         }
 

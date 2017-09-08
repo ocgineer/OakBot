@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace OakBot.Services
 {
-    public class SubsService : BaseService<Subs>
+    public class SubsService : BaseService<Sub>
     {
         public SubsService()
             : base(Storage.ConnectionString)
