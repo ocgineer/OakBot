@@ -11,9 +11,9 @@ namespace OakBot.ViewModel
 
         private TrainTimer Train;
 
-        public SubTrain()
+        public SubTrain(double interval, string message, Model.IChatConnectionService chat)
         {
-            Train = new TrainTimer(5000);
+            Train = new TrainTimer(interval, message, chat);
             
         }
         public bool IsTrain()

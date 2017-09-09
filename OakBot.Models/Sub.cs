@@ -9,7 +9,7 @@ namespace OakBot.Models
 {
     public class Sub
     {
-        [DbColumn(IsIdentity = true, IsPrimary = true)]
+        [DbColumn(IsPrimary = true)]
         public string UserID { get; set; }
         [DbColumn]
         public string Name { get; set; }

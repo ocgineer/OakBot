@@ -7,19 +7,25 @@ namespace OakBot.ViewModel
     public class TrainTimer : Timer
     {
         private DateTime m_dueTime;
+        private string _message;
 
-        //private SubWelcomeModel Main
+        private Model.IChatConnectionService _chat;
 
-        public TrainTimer(double interval) : base(interval)
-        {
-            this.Elapsed += this.ElapsedAction;
+        
+
+        public TrainTimer(double interval, string message, Model.IChatConnectionService chat) : base(interval)
+        {            
             this.AutoReset = false;
+            _message = message;
+            _chat = chat;
+            this.Elapsed += this.ElapsedAction;
         }
 
         protected new void Dispose()
         {
             this.Elapsed -= this.ElapsedAction;
             base.Dispose();
+            
         }
 
         public string TimeLeft
@@ -39,7 +45,8 @@ namespace OakBot.ViewModel
 
         private void ElapsedAction(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("testing ");
+            _chat.SendMessage(_message, false);
         }
+
     }
 }
