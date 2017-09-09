@@ -11,12 +11,13 @@ namespace OakBot.ViewModel
 {
     public class SubDB
     {
-        private SubsService svc = new SubsService();
+        private SubService svc;
 
         public SubDB()
         {
-            
-        }        
+            svc = new SubService();
+        }
+           
 
         public void AddSub(Sub newSub)
         {
@@ -31,6 +32,13 @@ namespace OakBot.ViewModel
         public Sub GetSub(string id)
         {
             return svc.GetById(id);
-        }        
+        } 
+        
+        public bool IsSub(string id)
+        {
+            return string.IsNullOrEmpty((svc.GetById(id)).Name)  ? false:true;
+        }
+
+        
     }
 }

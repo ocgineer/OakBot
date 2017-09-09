@@ -87,6 +87,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Data.SQLite.Core.1.0.105.2\lib\net46\System.Data.SQLite.dll</HintPath>
@@ -128,7 +129,11 @@
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
     <Compile Include="ViewModel\ExampleViewModel.cs" />
     <Compile Include="ViewModel\SubDB.cs" />
+    <Compile Include="ViewModel\SubTrain.cs" />
     <Compile Include="ViewModel\SubWelcomeModel.cs" />
+    <Compile Include="ViewModel\TrainTimer.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="View\DataGridBehavior.cs" />
     <Compile Include="Model\BinFileService\BinFileService.cs" />
     <Compile Include="Model\BinFileService\IBinFileService.cs" />
@@ -196,7 +201,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="ViewModel\App.config" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

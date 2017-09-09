@@ -7,21 +7,33 @@ using System.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 
+using OakBot.Common;
 using OakBot.Models;
-
-
+using OakBot.Services;
 using OakBot.Model;
+using System.IO;
 
 namespace OakBot.ViewModel
 {
     public class SubWelcomeModel : ViewModelBase
     {
+        /// <summary>
+        /// Appdata Location and Database File Location
+        /// </summary>
+
+        private static string dbFile = "C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db";
+
         private IChatConnectionService _chat;
-        private IBinFileService _bin;        
+        private IBinFileService _bin;
+
+
 
         private SubDB _subDB = new SubDB();
+        private SubTrain _train = new SubTrain();
 
-        private Sub _sub = new Sub(); 
+
+
+
 
         private string _prefix = "";
 
@@ -37,8 +49,9 @@ namespace OakBot.ViewModel
             // Register to events
             _chat.RawMessageReceived += _chat_RawMessageReceived;
 
-                        
-                        
+            BuildConnectionString(dbFile);
+
+
         }
 
         /// <summary>
@@ -46,44 +59,26 @@ namespace OakBot.ViewModel
         /// </summary>
         private void _chat_RawMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
-           
 
+            // raw message UserNotice
             if (e.ChatMessage.Command == IrcCommand.UserNotice)
             {
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Sub)
                 {
-                    // Check if in DB 
-                    _sub = _subDB.GetSub(e.ChatMessage.UserId);
-                    int tier;
 
-                    switch (e.ChatMessage.SubscriptionPlan)
+
+                    int tier = (int)e.ChatMessage.SubscriptionPlan;
+
+
+
+                    if (_subDB.IsSub(e.ChatMessage.UserId))
                     {
-                        case SubPlan.Prime:
-                        case SubPlan.Tier1:
-                            tier = 1000;
-                            break;
-
-                        case SubPlan.Tier2:
-                            tier = 2000;
-                            break;
-
-                        case SubPlan.Tier3:
-                            tier = 3000;
-                            break;
-
-                        default:
-                            tier = 1000;
-                            break;
-
-                    }
-
-                    if (_sub != null)
-                    {
-                        if (tier > _sub.Tier)
+                        var sub = _subDB.GetSub(e.ChatMessage.UserId);
+                        if (tier > sub.Tier)
                         {
                             _prefix = "+";
                         }
-                        else if (tier < _sub.Tier)
+                        else if (tier < sub.Tier)
                         {
                             _prefix = "-";
                         }
@@ -92,62 +87,44 @@ namespace OakBot.ViewModel
                             _prefix = "";
                         }
 
-                        Console.Write(_prefix + "Welcome Back " + _sub.Name + ", :Emotes: ");
+                        Console.Write(_prefix + "Welcome " + sub.Name + ", :Emotes: ");
                     }
-
                     else
                     {
-                        _sub.UserID = e.ChatMessage.UserId;
-                        _sub.Name = e.ChatMessage.DisplayName;
-                        _sub.Tier = tier;
-
-                        if (tier == 3000)
+                        var sub = new Sub()
                         {
-                            _sub.New = true;
+                            UserID = e.ChatMessage.UserId,
+                            Name = e.ChatMessage.Author,
+                            Tier = tier
+                        };
+
+                        if (tier > 3)
+                        {
+                            sub.New = true;
                         }
 
-                        Console.Write(_prefix + "Welcome " + _sub.Name + ", :Emotes: ");
+                        Console.Write(_prefix + "Welcome " + e.ChatMessage.DisplayName + ", :Emotes: ");
 
-                        _subDB.AddSub(_sub);
+                        _subDB.AddSub(sub);
                     }
-                
+
                 }
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Resub)
                 {
                     // resub
 
                     // Check if in DB 
-                    _sub = _subDB.GetSub(e.ChatMessage.UserId);
-                    int tier;
 
-                    switch (e.ChatMessage.SubscriptionPlan)
+                    int tier = (int)e.ChatMessage.SubscriptionPlan;
+
+                    if (_subDB.IsSub(e.ChatMessage.UserId))
                     {
-                        case SubPlan.Prime:
-                        case SubPlan.Tier1:
-                            tier = 1000;
-                            break;
-
-                        case SubPlan.Tier2:
-                            tier = 2000;
-                            break;
-
-                        case SubPlan.Tier3:
-                            tier = 3000;
-                            break;
-
-                        default:
-                            tier = 1000;
-                            break;
-
-                    }
-
-                    if (_sub != null)
-                    {
-                        if (tier > _sub.Tier)
+                        var sub = _subDB.GetSub(e.ChatMessage.UserId);
+                        if (tier > sub.Tier)
                         {
                             _prefix = "+";
                         }
-                        else if (tier < _sub.Tier)
+                        else if (tier < sub.Tier)
                         {
                             _prefix = "-";
                         }
@@ -156,23 +133,26 @@ namespace OakBot.ViewModel
                             _prefix = "";
                         }
 
-                        Console.Write(_prefix + "Welcome " + _sub.Name + ", :Emotes: ");
+                        Console.Write(_prefix + "Welcome back " + sub.Name + ", :Emotes: ");
                     }
-
+                    // Add to DB if not there
                     else
                     {
-                        _sub.UserID = e.ChatMessage.UserId;
-                        _sub.Name = e.ChatMessage.DisplayName;
-                        _sub.Tier = tier;
-
-                        if (tier == 3000)
+                        var sub = new Sub()
                         {
-                            _sub.New = true;
+                            UserID = e.ChatMessage.UserId,
+                            Name = e.ChatMessage.DisplayName,
+                            Tier = tier
+                        };
+
+                        if (tier > 3)
+                        {
+                            sub.New = true;
                         }
 
-                        Console.Write(_prefix + "Welcome " + _sub.Name + ", :Emotes: ");
+                        Console.Write(_prefix + "Welcome back " + e.ChatMessage.DisplayName + ", :Emotes: ");
 
-                        _subDB.AddSub(_sub);
+                        _subDB.AddSub(sub);
                     }
                 }
             }
@@ -180,15 +160,88 @@ namespace OakBot.ViewModel
             // normal chat message
             if (e.ChatMessage.Command == IrcCommand.PrivMsg)
             {
-
+                int tier = (int)e.ChatMessage.SubscriptionPlan;
 
                 // message content
-                _sub = _subDB.GetSub(e.ChatMessage.UserId);
+                if (_subDB.IsSub(e.ChatMessage.UserId))
+                {
+                    var sub = _subDB.GetSub(e.ChatMessage.UserId);
+                    if (tier > sub.Tier)
+                    {
+                        _prefix = "+";
+                    }
+                    else if (tier < sub.Tier)
+                    {
+                        _prefix = "-";
+                    }
+                    else
+                    {
+                        _prefix = "";
+                    }
 
-                Console.Write(_sub);
-                _chat.SendMessage(_sub.Name, false);
+                    Console.Write(_prefix + "Welcome " + sub.Name + ", :Emotes: ");
+                }
+                else
+                {
+                    var sub = new Sub()
+                    {                        
+                        UserID = e.ChatMessage.UserId,
+                        Name = e.ChatMessage.Author,
+                        Tier = tier
+                    };
+
+                    
+
+                    if (tier > 3)
+                    {
+                        sub.New = true;
+                    }
+
+                    Console.Write(_prefix + "Welcome back" + e.ChatMessage.DisplayName + ", :Emotes: ");
+
+                    _subDB.AddSub(sub);
+                }
+
+                switch (e.ChatMessage.Message)
+                {
+                    case "!start":
+                        _train.StartTrain();
+                        Console.WriteLine("Train Started...");
+                        break;
+                    case "!reset":
+                        _train.ResetTrain();
+                        Console.WriteLine("Train Reset...");
+                        break;
+                    case "!time":
+                        Console.WriteLine("Time Left on Train..." + _train.GetTime());
+                        break;
+                    case "!check":
+                        if (_train.IsTrain())
+                        {
+                            Console.WriteLine("Train yes");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Train no");
+                        }
+                        break;
+                }                
             }
         }
+
+        public void BuildConnectionString(string dbFile)
+        {
+            if (String.IsNullOrEmpty(Storage.ConnectionString))
+            {
+                Storage.ConnectionString = string.Format("Data Source={0};Version=3;", dbFile);
+
+                var svc = new SubService();
+            }
+        }
+
+
+    
+        
 
         /// <summary>
         /// Shutdown message handler, handle shutdown.

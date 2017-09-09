@@ -63,6 +63,7 @@ namespace OakBot.Utility
         public SQLiteConnection GetConnection()
         {
             return new SQLiteConnection(Context.ConnectionString);
+            //return new SQLiteConnection("Data Source=C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db;Version=3;");
         }
         /// <summary>
         /// Inserts the single record into table

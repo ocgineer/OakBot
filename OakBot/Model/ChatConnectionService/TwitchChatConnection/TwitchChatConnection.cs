@@ -172,7 +172,7 @@ namespace OakBot.Model
             OnRawMessageReceived(twitchMsg);
             
             #if DEBUG
-            //Console.WriteLine(twitchMsg.RawMessage);
+            Console.WriteLine(twitchMsg.RawMessage);
             #endif
 
             switch (twitchMsg.Command)
