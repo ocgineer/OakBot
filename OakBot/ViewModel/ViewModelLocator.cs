@@ -49,8 +49,10 @@ namespace OakBot.ViewModel
             // Register ViewModels instanciated on use by a View
             SimpleIoc.Default.Register<MainViewModel>();
 
-            // Register ViewModels create instance Immediately as no view is using them yet
             SimpleIoc.Default.Register<ExampleViewModel>(true);
+
+            // Register ViewModels create instance Immediately as no view is using them yet
+            SimpleIoc.Default.Register<SubWelcomeModel>(true);
         }
 
         public MainViewModel Main
@@ -61,14 +63,22 @@ namespace OakBot.ViewModel
             }
         }
 
-        public ExampleViewModel Giveaway
+        public SubWelcomeModel SubWelcome
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<SubWelcomeModel>();
+            }
+        }
+
+        public ExampleViewModel Example
         {
             get
             {
                 return ServiceLocator.Current.GetInstance<ExampleViewModel>();
             }
         }
-        
+
         public static void Cleanup()
         {
             // TODO Clear the ViewModels

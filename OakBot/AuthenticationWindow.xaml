@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:view="clr-namespace:OakBot.View"
         mc:Ignorable="d"
-        Title="Authentication" Height="480" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" ShowInTaskbar="False">
+        Title="Authentication" Height="480" Width="400" WindowStyle="ToolWindow" ResizeMode="NoResize" ShowInTaskbar="True">
     <Grid Background="White">
         <WebBrowser x:Name="AuthWebBrowser" Navigated="AuthWebBrowser_Navigated" LoadCompleted="AuthWebBrowser_LoadCompleted" Navigating="AuthWebBrowser_Navigating" />
     </Grid>
