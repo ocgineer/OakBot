@@ -137,7 +137,7 @@ namespace OakBot.ViewModel
                         var sub = new Sub()
                         {
                             UserID = e.ChatMessage.UserId,
-                            Name = e.ChatMessage.DisplayName,
+                            Name = e.ChatMessage.SubscriptionLogin,
                             Tier = tier
                         };
 
@@ -158,8 +158,7 @@ namespace OakBot.ViewModel
                         else
                         {
                             _trainCount = 1;
-                            _train.StartTrain();
-                            _trainEnd.StartTrain();
+                            _trainStart.Start();                            
                         }
 
                         if (sub.New)
@@ -228,8 +227,8 @@ namespace OakBot.ViewModel
                         else
                         {
                             _trainCount = 1;
-                            _train.StartTrain();
-                            _trainEnd.StartTrain();
+                            _trainStart.Start();
+                            
                         }
 
                         if (sub.New)
@@ -247,7 +246,7 @@ namespace OakBot.ViewModel
                         var sub = new Sub()
                         {
                             UserID = e.ChatMessage.UserId,
-                            Name = e.ChatMessage.DisplayName,
+                            Name = e.ChatMessage.SubscriptionLogin,
                             Tier = tier
                         };
 
@@ -268,8 +267,7 @@ namespace OakBot.ViewModel
                         else
                         {
                             _trainCount = 1;
-                            _train.StartTrain();
-                            _trainEnd.StartTrain();
+                            _trainStart.Start();
                         }
 
                         if (sub.New)
@@ -301,28 +299,31 @@ namespace OakBot.ViewModel
             if (e.ChatMessage.Command == IrcCommand.PrivMsg)
             {
                 string[] message = e.ChatMessage.Message.Split();
-                switch (message[0])
+                if (e.ChatMessage.IsModerator)
                 {
-                    case "~subs":
-                        _chat.SendMessage("Total Subs Today: " + _subCount, false);
-                        break;
-                    case "~train":
-                        if (_train.IsTrain())
-                        {
-                            _chat.SendMessage("Train Length: " + _trainCount + " - Time Until Departure: " + _train.GetTime() + " - Longest Train Today: %trainDayHigh - Longest Train All Time: %trainHigh", false);
-                        }
-                        else
-                        {
-                            _chat.SendMessage("The edeTRAIN has not arrived yet!!", false);
-                        }
-                        break;
-                    case "~set":
-                        if (message.Length == 2)
-                        {
-                            _subCount = Convert.ToInt32(message[1]);                            
-                        }
-                        break;
-                }   
+                    switch (message[0])
+                    {
+                        case "~subs":
+                            _chat.SendMessage("Total Subs Today: " + _subCount, false);
+                            break;
+                        case "~train":
+                            if (_train.IsTrain())
+                            {
+                                _chat.SendMessage("Train Length: " + _trainCount + " - Time Until Departure: " + _train.GetTime() + " - Longest Train Today: %trainDayHigh - Longest Train All Time: %trainHigh", false);
+                            }
+                            else
+                            {
+                                _chat.SendMessage("The edeTRAIN has not arrived yet!!", false);
+                            }
+                            break;
+                        case "~set":
+                            if (message.Length == 2)
+                            {
+                                _subCount = Convert.ToInt32(message[1]);
+                            }
+                            break;
+                    }
+                }
             }
         }
 
