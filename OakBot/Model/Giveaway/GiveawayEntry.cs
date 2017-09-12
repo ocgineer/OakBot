@@ -1,5 +1,8 @@
-﻿namespace OakBot.Model
+﻿using System;
+
+namespace OakBot.Model
 {
+    [Serializable]
     public class GiveawayEntry
     {
         public string ChannelId { get; set; }

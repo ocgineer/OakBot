@@ -16,8 +16,7 @@ namespace OakBot.ViewModel
 {
     /* TODO:
      * - Chat commands
-     * - Save/Load prior used settings
-     * - Save/Load prior winners?
+     * - Send WebSocket Events
      */
 
     public class GiveawayViewModel : ViewModelBase
@@ -31,20 +30,7 @@ namespace OakBot.ViewModel
 
         private MediaPlayer _mediaPlayer;
 
-        private string _keyword;
-        private string _prize;
-        private int _openTimeMinutes;
-        private int _responseTimeSeconds;
-        private int _subscriberLuck;
-        private bool _ignoreKeywordCase;
-        private bool _autoDraw;
-        private bool _announceTimeLeft;
-        private bool _playSound;
-        private string _selectedAudioFile;
-        private bool _excludeSubscriberToRespond;
-        private bool _followingRequired;
-        private bool _subscriberOnly;
-        private bool _winnersCanEnter;
+        GiveawayModuleSettings _moduleSettings;
         
         private Timer _timerOpen;
         private Timer _timerResponse;
@@ -123,22 +109,25 @@ namespace OakBot.ViewModel
             _selectedWinner = new GiveawayEntry { DisplayName = "WINNER" };
             _WinnerHasReplied = true;
             
-            // Load previous settings if available else set defaults
-            _keyword = "!item";
-            _ignoreKeywordCase = true;
-            _prize = "A beautiful item";
-            _openTimeMinutes = 10;
-            _autoDraw = true;
-            _announceTimeLeft = true;
-            _playSound = false;
-            _subscriberLuck = 2;
-            _followingRequired = false;
-            _winnersCanEnter = false;
-            _responseTimeSeconds = 60;
-            _excludeSubscriberToRespond = true;
+            // Load in previous saved settings else use new default settings
+            var loaded = BinaryFile.ReadBinFile($"GivewawayModule{ID}");
+            if (loaded != null && loaded is GiveawayModuleSettings)
+            {
+                // success load last saved settings and set previous winners
+                _moduleSettings = (GiveawayModuleSettings)loaded;
+                if (_moduleSettings.SavedWinnersList?.Count > 0)
+                {
+                    _listWinners = new ObservableCollection<GiveawayEntry>(_moduleSettings.SavedWinnersList);
+                }
+            }
+            else
+            {
+                // failure load defaults
+                _moduleSettings = new GiveawayModuleSettings();
+            }
 
             // Register to service events and system broadcast messages
-            _chatService.ChatMessageReceived += _chat_ChatMessageReceived;
+            _chatService.ChatMessageReceived += _chatService_ChatMessageReceived;
         }
 
         #endregion
@@ -213,8 +202,8 @@ namespace OakBot.ViewModel
             // Transmit WS event
             /* TODO: WEBSOCKET EVENT ON GIVEAWAY OPENED */
 
-            // Save current values to file
-            /* TODO: SAVE VALUES */
+            // Save current settings values to file
+            SaveSettings();
         }
 
         /// <summary>
@@ -249,11 +238,11 @@ namespace OakBot.ViewModel
 
             // If subscriber luck is set, get all entires that are subscriber
             // and randomly insert the 'amount of entires' extra in the draw-list
-            if (_subscriberLuck > 1)
+            if (_moduleSettings.SubscriberLuck > 1)
             {
                 foreach (GiveawayEntry SubEntry in _listEntries.Where(x => x.IsSubscriber))
                 {
-                    for (int i = 1; i < _subscriberLuck; i++)
+                    for (int i = 1; i < _moduleSettings.SubscriberLuck; i++)
                     {
                         _drawList.Insert(_rndGen.Next(0, _drawList.Count), SubEntry);
                     }
@@ -294,11 +283,15 @@ namespace OakBot.ViewModel
             // a redraw and the winner has replied by message or default win
             if (redraw && _WinnerHasReplied)
             {
+                // Remove previous replied winner from winners list
                 GiveawayEntry previous = SelectedWinner;
-                DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                await DispatcherHelper.RunAsync(() =>
                 {
                     _listWinners.Remove(previous);
                 });
+
+                // Save changed winners list after winners list has updated
+                SaveSettings();
             }
 
             // Clear 'previous' winners response messages
@@ -324,6 +317,7 @@ namespace OakBot.ViewModel
                 // Transmit WS event
                 /* TODO: WEBSOCKET EVENT ON NO ENTRIES LEFT */
 
+                // Stop Draw function
                 return;
             }
 
@@ -339,7 +333,7 @@ namespace OakBot.ViewModel
 
             // If follow required validate follow with Twitch API
             // Skips follow check if selected winner is a subscriber
-            if (_followingRequired && !SelectedWinner.IsSubscriber)
+            if (_moduleSettings.FollowingRequired && !SelectedWinner.IsSubscriber)
             {
                 try
                 {
@@ -363,7 +357,7 @@ namespace OakBot.ViewModel
             _timestampDraw = DateTime.UtcNow;
 
             // Require response timer and/or exclude subs from having to respond
-            if ((_excludeSubscriberToRespond && SelectedWinner.IsSubscriber) || _responseTimeSeconds < 10)
+            if ((_moduleSettings.ExcludeSubscriberToRespond && SelectedWinner.IsSubscriber) || _moduleSettings.ResponseTimeSeconds < 10)
             {
                 // Send chat message of the new winner, no reply required
                 string message = $"{SelectedWinner} you have won the giveaway for {Prize}!";
@@ -373,14 +367,17 @@ namespace OakBot.ViewModel
                 WinnerHasReplied = true;
 
                 // Add winner to winners list
-                DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                await DispatcherHelper.RunAsync(() =>
                 {
                     _listWinners.Add(SelectedWinner);
                 });
+
+                // Save current winners list after winners list is done updating
+                SaveSettings();
             }
             else
             {
-                // Send chat message of the new winner, timired response
+                // Send chat message of the new winner, timed response
                 string message = $"{SelectedWinner} you have won the giveaway for {Prize}! ";
                 message += $"Please reply within {ResponseTimeSeconds} seconds in the chat to claim your prize. ";
                 _chatService.SendMessage(message, false);
@@ -414,7 +411,7 @@ namespace OakBot.ViewModel
             }
 
             // If the giveaway is for subscribers only ignore non subscribers
-            if (_subscriberOnly && !message.IsSubscriber)
+            if (_moduleSettings.SubscriberOnly && !message.IsSubscriber)
             {
                 return;
             }
@@ -442,7 +439,11 @@ namespace OakBot.ViewModel
         /// </summary>
         private void ClearWinners()
         {
+            // Clear winners list
             _listWinners.Clear();
+
+            // Save changed winners list
+            SaveSettings();
         }
 
         /// <summary>
@@ -486,6 +487,9 @@ namespace OakBot.ViewModel
                 {
                     // Remove item from winners list
                     _listWinners.Remove(item);
+
+                    // Save changed winners list
+                    SaveSettings();
                 }
                 else
                 {
@@ -499,6 +503,16 @@ namespace OakBot.ViewModel
             }
         }
 
+        /// <summary>
+        /// Save <see cref="_moduleSettings"/> to file after adding winners list.
+        /// </summary>
+        private void SaveSettings()
+        {
+            // Set winners into module settings and save settings to file
+            _moduleSettings.SavedWinnersList = new List<GiveawayEntry>(_listWinners);
+            BinaryFile.WriteBinFile($"GivewawayModule{ID}", _moduleSettings);
+        }
+        
         /// <summary>
         /// Opens a File Dialog to select a audio file.
         /// </summary>
@@ -517,11 +531,11 @@ namespace OakBot.ViewModel
 
             if (openFileDialog.ShowDialog() == true)
             {
-                _selectedAudioFile = openFileDialog.FileName;
+                _moduleSettings.SelectedAudioFile = openFileDialog.FileName;
             }
             else
             {
-                _selectedAudioFile = null;
+                _moduleSettings.SelectedAudioFile = null;
             }
 
             openFileDialog = null;
@@ -552,25 +566,25 @@ namespace OakBot.ViewModel
                 }
 
                 // Calculate the time left before closure in seconds
-                int openTimeSeconds = (_openTimeMinutes * 60);
+                int openTimeSeconds = (_moduleSettings.OpenTimeMinutes * 60);
                 int timeLeft = (openTimeSeconds - (int)_elapsedOpenTime.TotalSeconds);
 
                 // Announce half time left
-                if (_announceTimeLeft && timeLeft == (openTimeSeconds / 2))
+                if (_moduleSettings.AnnounceTimeLeft && timeLeft == (openTimeSeconds / 2))
                 {
                     _chatService.SendMessage($"{timeLeft} seconds left before the giveaway for {Prize} is closed! Type in {Keyword} to enter the giveaway!", false);
                 }
 
                 // Announce 10 seconds left
-                if (_announceTimeLeft && timeLeft == 10)
+                if (_moduleSettings.AnnounceTimeLeft && timeLeft == 10)
                 {
                     _chatService.SendMessage("10 seconds left before the giveaway is closed!", false);
                 }
 
                 // Play sound at 10 seconds left
-                if (_playSound && timeLeft == 10)
+                if (_moduleSettings.PlaySound && timeLeft == 10)
                 {
-                    if (_selectedAudioFile != null)
+                    if (_moduleSettings.SelectedAudioFile != null)
                     {
                         /* TODO: OakBot SFX system to enqueue sound files / volumes to a
                          * SFX service to control all audio output flows
@@ -578,7 +592,7 @@ namespace OakBot.ViewModel
 
                         DispatcherHelper.CheckBeginInvokeOnUI(() =>
                         {
-                            _mediaPlayer.Open(new Uri(_selectedAudioFile));
+                            _mediaPlayer.Open(new Uri(_moduleSettings.SelectedAudioFile));
                             _mediaPlayer.Play();
                         });
                     }
@@ -607,7 +621,7 @@ namespace OakBot.ViewModel
                 Close();
 
                 // Auto draw if enabled and has entries
-                if (_autoDraw && _isHavingEntries)
+                if (_moduleSettings.AutoDraw && _isHavingEntries)
                 {
                     Draw(false);
                 }
@@ -629,10 +643,10 @@ namespace OakBot.ViewModel
         /// <summary>
         /// Chat MessageReceived; handle chat command and entries for 'keyword' giveaway.
         /// </summary>
-        private void _chat_ChatMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
+        private async void _chatService_ChatMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
             // Can only be entered with the giveaway is active, keyword can be set to be case sensitive
-            if (_isActive && e.ChatMessage.Message.StartsWith(_keyword,
+            if (_isActive && e.ChatMessage.Message.StartsWith(_moduleSettings.Keyword,
                 IgnoreCase ? StringComparison.InvariantCultureIgnoreCase : StringComparison.InvariantCulture))
             {
                 // Let the AddEntry handle if the person is eligiable to enter
@@ -650,10 +664,13 @@ namespace OakBot.ViewModel
 
                     // Stop response timer and add to winners list
                     _timerResponse.Stop();
-                    DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                    await DispatcherHelper.RunAsync(() =>
                     {
                         _listWinners.Add(SelectedWinner);
                     });
+
+                    // Save winner to file after winners list has been updated
+                    SaveSettings();
                 }
 
                 // Add any message from winner to overview
@@ -785,11 +802,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _keyword;
+                return _moduleSettings.Keyword;
             }
             set
             {
-                _keyword = value;
+                _moduleSettings.Keyword = value;
                 RaisePropertyChanged();
             }
         }
@@ -801,11 +818,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _ignoreKeywordCase;
+                return _moduleSettings.KeywordCaseInsensitive;
             }
             set
             {
-                _ignoreKeywordCase = value;
+                _moduleSettings.KeywordCaseInsensitive = value;
                 RaisePropertyChanged();
             }
         }
@@ -817,11 +834,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _prize;
+                return _moduleSettings.Prize;
             }
             set
             {
-                _prize = value;
+                _moduleSettings.Prize = value;
                 RaisePropertyChanged();
             }
         }
@@ -833,11 +850,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _openTimeMinutes;
+                return _moduleSettings.OpenTimeMinutes;
             }
             set
             {
-                _openTimeMinutes = value;
+                _moduleSettings.OpenTimeMinutes = value;
                 RaisePropertyChanged();
             }
         }
@@ -849,11 +866,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _autoDraw;
+                return _moduleSettings.AutoDraw;
             }
             set
             {
-                _autoDraw = value;
+                _moduleSettings.AutoDraw = value;
                 RaisePropertyChanged();
             }
         }
@@ -865,11 +882,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _announceTimeLeft;
+                return _moduleSettings.AnnounceTimeLeft;
             }
             set
             {
-                _announceTimeLeft = value;
+                _moduleSettings.AnnounceTimeLeft = value;
                 RaisePropertyChanged();
             }
         }
@@ -881,11 +898,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _playSound;
+                return _moduleSettings.PlaySound;
             }
             set
             {
-                _playSound = value;
+                _moduleSettings.PlaySound = value;
                 RaisePropertyChanged();
             }
         }
@@ -897,11 +914,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _subscriberLuck;
+                return _moduleSettings.SubscriberLuck;
             }
             set
             {
-                _subscriberLuck = value;
+                _moduleSettings.SubscriberLuck = value;
                 RaisePropertyChanged();
             }
         }
@@ -913,11 +930,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _followingRequired;
+                return _moduleSettings.FollowingRequired;
             }
             set
             {
-                _followingRequired = value;
+                _moduleSettings.FollowingRequired = value;
                 RaisePropertyChanged();
             }
         }
@@ -929,11 +946,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _subscriberOnly;
+                return _moduleSettings.SubscriberOnly;
             }
             set
             {
-                _subscriberOnly = value;
+                _moduleSettings.SubscriberOnly = value;
                 RaisePropertyChanged();
             }
         }
@@ -945,11 +962,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _winnersCanEnter;
+                return _moduleSettings.WinnersCanEnter;
             }
             set
             {
-                _winnersCanEnter = value;
+                _moduleSettings.WinnersCanEnter = value;
                 RaisePropertyChanged();
             }
         }
@@ -961,11 +978,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _responseTimeSeconds;
+                return _moduleSettings.ResponseTimeSeconds;
             }
             set
             {
-                _responseTimeSeconds = value;
+                _moduleSettings.ResponseTimeSeconds = value;
                 RaisePropertyChanged();
             }
         }
@@ -977,11 +994,11 @@ namespace OakBot.ViewModel
         {
             get
             {
-                return _excludeSubscriberToRespond;
+                return _moduleSettings.ExcludeSubscriberToRespond;
             }
             set
             {
-                _excludeSubscriberToRespond = value;
+                _moduleSettings.ExcludeSubscriberToRespond = value;
                 RaisePropertyChanged();
             }
         }

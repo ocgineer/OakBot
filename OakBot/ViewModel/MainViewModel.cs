@@ -59,15 +59,12 @@ namespace OakBot.ViewModel
             _wse.SetApiToken("oakbotapitest");
 
             // Load settings
-            _mainSettings = (MainSettings)_bfh.ReadEncryptedBinFile("LoginSettings");
-            if (_mainSettings == null)
+            var loaded = _bfh.ReadEncryptedBinFile("LoginSettings");
+            if (loaded != null && loaded is MainSettings)
             {
-                // Settings file does not exist or reading file went wrong
-                // so we set startup with a clean settings template to use.
-                _mainSettings = new MainSettings();
-            }
-            else
-            {
+                // Cast to actual settings class
+                _mainSettings = (MainSettings)loaded;
+
                 // Set loaded settings values through properties for UI
                 ChannelName = _mainSettings.Channel;
                 BotUsername = _mainSettings.BotUsername;
@@ -89,6 +86,12 @@ namespace OakBot.ViewModel
                     _casterCredentials = new TwitchCredentials(
                         _mainSettings.CasterUsername, _mainSettings.CasterOauthKey, true);
                 }
+            }
+            else
+            {
+                // Settings file does not exist or reading file went wrong
+                // so we set startup with a clean settings template to use.
+                _mainSettings = new MainSettings();
             }
             
         }

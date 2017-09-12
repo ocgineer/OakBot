@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace OakBot.Model
 {
@@ -33,6 +34,21 @@ namespace OakBot.Model
             {
                 amount--;
                 Shuffle(list, rng);
+            }
+        }
+    }
+
+    public static class ObservableCollectionExtensions
+    {
+        /// <summary>
+        /// Adds a <see cref="IEnumerable{T}"/> range to a <see cref="ObservableCollection{T}"/>.
+        /// </summary>
+        /// <param name="items">Items to add to <see cref="ObservableCollection{T}"/>.</param>
+        public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                collection.Add(item);
             }
         }
     }
