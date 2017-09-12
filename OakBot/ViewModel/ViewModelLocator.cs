@@ -73,7 +73,6 @@ namespace OakBot.ViewModel
             }
         }
 
-        public ExampleViewModel Example
         public SubWelcomeModel SubWelcome
         {
             get
