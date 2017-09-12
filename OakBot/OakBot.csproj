@@ -125,11 +125,23 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Model\Giveaway\GiveawayEntry.cs" />
     <Compile Include="Model\Static\Authentication.cs" />
     <Compile Include="AuthenticationWindow.xaml.cs">
       <DependentUpon>AuthenticationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
+    <Compile Include="Model\Static\MethodExtensions.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPI.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchApiRequests.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Channel.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follower.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follows.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\GetUsers.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\User.cs" />
+    <Compile Include="Model\TwitchPubSubService\ITwitchPubSubService.cs" />
+    <Compile Include="Model\TwitchPubSubService\TwitchPubSubPayload.cs" />
+    <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
     <Compile Include="ViewModel\ExampleViewModel.cs" />
     <Compile Include="ViewModel\SubDB.cs" />
     <Compile Include="ViewModel\SubTrain.cs" />
@@ -137,6 +149,8 @@
     <Compile Include="ViewModel\TrainTimer.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ViewModel\GiveawaysViewModel.cs" />
+    <Compile Include="ViewModel\GiveawayViewModel.cs" />
     <Compile Include="View\DataGridBehavior.cs" />
     <Compile Include="Model\BinFileService\BinFileService.cs" />
     <Compile Include="Model\BinFileService\IBinFileService.cs" />
@@ -204,7 +218,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ViewModel\App.config" />
+    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
@@ -218,6 +232,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Folder Include="Model\Giveaway\" />
   </ItemGroup>
