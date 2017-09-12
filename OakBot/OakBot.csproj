@@ -122,11 +122,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\Giveaway\GiveawayEntry.cs" />
+    <Compile Include="Model\Giveaway\GiveawayModuleSettings.cs" />
     <Compile Include="Model\Static\Authentication.cs" />
     <Compile Include="AuthenticationWindow.xaml.cs">
       <DependentUpon>AuthenticationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
+    <Compile Include="Model\Static\BinaryFile.cs" />
     <Compile Include="Model\Static\MethodExtensions.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPI.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchApiRequests.cs" />
