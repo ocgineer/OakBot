@@ -6,7 +6,7 @@ using System.Timers;
 
 namespace OakBot.ViewModel
 {
-    public class SubTrain
+    public class SubTrain 
     {
 
         private TrainTimer Train;

@@ -4,7 +4,7 @@ using System.Timers;
 
 namespace OakBot.ViewModel
 {
-    public class TrainTimer : Timer
+    public class TrainTimer : Timer, IDisposable
     {
         private DateTime m_dueTime;
         private string _message;

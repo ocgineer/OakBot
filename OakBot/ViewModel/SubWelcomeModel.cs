@@ -55,6 +55,8 @@ namespace OakBot.ViewModel
             _trainEnd = new SubTrain(240000, "One minute until the edeTRAIN departs!!", chat);
             _train = new SubTrain(300000, "The edeTRAIN has just departed!! edeBRUH", chat);
 
+            _trainStart.AutoReset = false;
+
             //Build String for Database
             BuildConnectionString(dbFile);
 
@@ -80,14 +82,25 @@ namespace OakBot.ViewModel
             {
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Sub)
                 {
-                    int tier = (int)e.ChatMessage.SubscriptionPlan;
                     _subCount += 1;
+
+                    int tier;
+
+                    if ((int)e.ChatMessage.SubscriptionPlan == 0)
+                    {
+                        tier = 1;
+                    }
+                    else
+                    {
+                        tier = (int)e.ChatMessage.SubscriptionPlan;
+                    }
 
                     if (_subDB.IsSub(e.ChatMessage.UserId))
                     {
                         var sub = _subDB.GetSub(e.ChatMessage.UserId);
+
                         if (tier != sub.Tier)
-                        {
+                        {                            
                             if (tier > sub.Tier)
                             {
                                 _prefix = "+";
@@ -101,10 +114,10 @@ namespace OakBot.ViewModel
                                 _prefix = "";
                             }
                             
-                            if (tier == 3 && sub.Tier < 3)
+                            if (tier == 3)
                             {
                                 sub.New = true;
-                            }
+                            }                            
                         }
 
                         _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
@@ -129,6 +142,7 @@ namespace OakBot.ViewModel
 
                         if (_prefix != "")
                         {
+                            sub.Tier = (int)e.ChatMessage.SubscriptionPlan;
                             _subDB.UpdateSub(sub);
                         }
                     }
@@ -139,7 +153,7 @@ namespace OakBot.ViewModel
                             UserID = e.ChatMessage.UserId,
                             Name = e.ChatMessage.SubscriptionLogin,
                             Tier = tier
-                        };
+                        };                        
 
                         if (tier == 3)
                         {
@@ -148,7 +162,7 @@ namespace OakBot.ViewModel
 
                         _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
 
-                        if (_train.IsTrain())
+                        if (_train.IsTrain() || _trainStart.Enabled)
                         {
                             _trainCount += 1;
                             _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
@@ -188,12 +202,23 @@ namespace OakBot.ViewModel
                 }
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Resub)
                 {
-                    int tier = (int)e.ChatMessage.SubscriptionPlan;
                     _subCount += 1;
+
+                    int tier;
+
+                    if ((int)e.ChatMessage.SubscriptionPlan == 0)
+                    {
+                        tier = 1;
+                    }
+                    else
+                    {
+                        tier = (int)e.ChatMessage.SubscriptionPlan;
+                    }                   
 
                     if (_subDB.IsSub(e.ChatMessage.UserId))
                     {
                         var sub = _subDB.GetSub(e.ChatMessage.UserId);
+
                         if (tier != sub.Tier)
                         {
                             if (tier > sub.Tier)
@@ -209,7 +234,7 @@ namespace OakBot.ViewModel
                                 _prefix = "";
                             }
 
-                            if (tier == 3 && sub.Tier < 3)
+                            if (tier == 3)
                             {
                                 sub.New = true;
                             }
@@ -217,7 +242,7 @@ namespace OakBot.ViewModel
 
                         _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome Back " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
 
-                        if (_train.IsTrain())
+                        if (_train.IsTrain() || _trainStart.Enabled)
                         {
                             _trainCount += 1;
                             _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
@@ -227,8 +252,7 @@ namespace OakBot.ViewModel
                         else
                         {
                             _trainCount = 1;
-                            _trainStart.Start();
-                            
+                            _trainStart.Start();                            
                         }
 
                         if (sub.New)
@@ -238,6 +262,7 @@ namespace OakBot.ViewModel
 
                         if (_prefix != "")
                         {
+                            sub.Tier = (int)e.ChatMessage.SubscriptionPlan;
                             _subDB.UpdateSub(sub);
                         }
                     }
@@ -257,7 +282,7 @@ namespace OakBot.ViewModel
 
                         _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome Back " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
 
-                        if (_train.IsTrain())
+                        if (_train.IsTrain() || _trainStart.Enabled)
                         {
                             _trainCount += 1;
                             _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
@@ -309,7 +334,7 @@ namespace OakBot.ViewModel
                         case "~train":
                             if (_train.IsTrain())
                             {
-                                _chat.SendMessage("Train Length: " + _trainCount + " - Time Until Departure: " + _train.GetTime() + " - Longest Train Today: %trainDayHigh - Longest Train All Time: %trainHigh", false);
+                                _chat.SendMessage("Train Length: " + _trainCount + " - Time Until Departure: " + _train.GetTime() + " - Longest Train Today: " + _trainDayHigh + " - Longest Train All Time: " + _trainHigh, false);
                             }
                             else
                             {
