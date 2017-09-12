@@ -118,6 +118,7 @@ namespace OakBot.Model
 
             // Start the PING timer on a 60 sec interval
             _pinger = new System.Timers.Timer(60000);
+            _pinger.Elapsed += _pinger_Elapsed;
             _pinger.Start();
 
             // Fire the Connected event
