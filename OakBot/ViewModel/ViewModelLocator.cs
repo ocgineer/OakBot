@@ -43,11 +43,13 @@ namespace OakBot.ViewModel
                 // Create run time view services and models
                 SimpleIoc.Default.Register<IChatConnectionService, ChatConnectionService>();
                 SimpleIoc.Default.Register<IWebSocketEventService, WebSocketEventService>();
+                SimpleIoc.Default.Register<ITwitchPubSubService, TwitchPubSubService>();
                 SimpleIoc.Default.Register<IBinFileService, BinFileService>();
             }
 
             // Register ViewModels instanciated on use by a View
             SimpleIoc.Default.Register<MainViewModel>();
+            SimpleIoc.Default.Register<GiveawaysViewModel>();
 
             // Register ViewModels create instance Immediately as no view is using them yet
             SimpleIoc.Default.Register<ExampleViewModel>(true);
@@ -61,7 +63,15 @@ namespace OakBot.ViewModel
             }
         }
 
-        public ExampleViewModel Giveaway
+        public GiveawaysViewModel Giveaways
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<GiveawaysViewModel>();
+            }
+        }
+
+        public ExampleViewModel Example
         {
             get
             {

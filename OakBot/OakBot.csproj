@@ -121,12 +121,26 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Model\Giveaway\GiveawayEntry.cs" />
     <Compile Include="Model\Static\Authentication.cs" />
     <Compile Include="AuthenticationWindow.xaml.cs">
       <DependentUpon>AuthenticationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
+    <Compile Include="Model\Static\MethodExtensions.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPI.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchApiRequests.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Channel.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follower.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follows.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\GetUsers.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\User.cs" />
+    <Compile Include="Model\TwitchPubSubService\ITwitchPubSubService.cs" />
+    <Compile Include="Model\TwitchPubSubService\TwitchPubSubPayload.cs" />
+    <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
     <Compile Include="ViewModel\ExampleViewModel.cs" />
+    <Compile Include="ViewModel\GiveawaysViewModel.cs" />
+    <Compile Include="ViewModel\GiveawayViewModel.cs" />
     <Compile Include="View\DataGridBehavior.cs" />
     <Compile Include="Model\BinFileService\BinFileService.cs" />
     <Compile Include="Model\BinFileService\IBinFileService.cs" />
@@ -208,9 +222,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\Giveaway\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.105.2\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.105.2\build\net46\System.Data.SQLite.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -7,8 +7,8 @@
         xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:view="clr-namespace:OakBot.View"
         mc:Ignorable="d"
-        Title="{Binding Main.Title, Mode=OneWay}" Height="400" Width="600"
-        DataContext="{Binding Source={StaticResource Locator}}" MinWidth="600" MinHeight="400">
+        Title="{Binding Main.Title, Mode=OneWay}" Height="448" Width="800"
+        DataContext="{Binding Source={StaticResource Locator}}" MinWidth="800" MinHeight="500">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Closing">
             <cmd:EventToCommand Command="{Binding Main.CmdOnClose}" PassEventArgsToCommand="True"/>
@@ -16,12 +16,15 @@
     </i:Interaction.Triggers>
     <Window.Resources>
         <view:BoolToNotBool x:Key="InverseBool"/>
+        <Canvas x:Key="IconDeleteAccount" Width="24" Height="24">
+            <Path Data="M15,14C17.67,14 23,15.33 23,18V20H7V18C7,15.33 12.33,14 15,14M15,12A4,4 0 0,1 11,8A4,4 0 0,1 15,4A4,4 0 0,1 19,8A4,4 0 0,1 15,12M5,9.59L7.12,7.46L8.54,8.88L6.41,11L8.54,13.12L7.12,14.54L5,12.41L2.88,14.54L1.46,13.12L3.59,11L1.46,8.88L2.88,7.46L5,9.59Z" Fill="Black" />
+        </Canvas>
     </Window.Resources>
     <Grid>
         <TabControl x:Name="tabControl">
             <TabItem Header="Config">
                 <Grid Background="#FFE5E5E5" DataContext="{Binding Main}">
-                    <GroupBox Header="Bot Login" Height="93" Margin="10,10,220,0" VerticalAlignment="Top" IsEnabled="{Binding IsBotConnected, Converter={StaticResource InverseBool}, UpdateSourceTrigger=PropertyChanged}">
+                    <GroupBox Header="Bot Login" Height="93" Margin="10,10,240,0" VerticalAlignment="Top" IsEnabled="{Binding IsBotConnected, Converter={StaticResource InverseBool}, UpdateSourceTrigger=PropertyChanged}">
                         <Grid>
                             <Label Content="Channel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Height="24"/>
                             <TextBox VerticalAlignment="Top" Margin="100,10,124,0" TextWrapping="NoWrap" Text="{Binding ChannelName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="24"/>
@@ -42,7 +45,7 @@
                             </Button>
                         </Grid>
                     </GroupBox>
-                    <GroupBox Header="Caster Login" Height="66" Margin="10,108,220,0" VerticalAlignment="Top" IsEnabled="{Binding IsCasterConnected, Converter={StaticResource InverseBool}, UpdateSourceTrigger=PropertyChanged}">
+                    <GroupBox Header="Caster Login" Height="66" Margin="10,108,240,0" VerticalAlignment="Top" IsEnabled="{Binding IsCasterConnected, Converter={StaticResource InverseBool}, UpdateSourceTrigger=PropertyChanged}">
                         <Grid>
                             <Label Content="Caster Name" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Height="24"/>
                             <TextBox VerticalAlignment="Top" Margin="100,10,124,0" TextWrapping="NoWrap" Text="{Binding CasterUsername, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="24"/>
@@ -61,7 +64,7 @@
                             </Button>
                         </Grid>
                     </GroupBox>
-                    <GroupBox Header="Connect" Height="164" Margin="0,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="205">
+                    <GroupBox Header="Connect" Height="164" Margin="0,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="225">
                         <Grid>
                             <CheckBox Content="Use Secure (SSL) Connection" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" IsChecked="{Binding IsUsingSSL}" IsEnabled="{Binding IsBotConnected, Converter={StaticResource InverseBool}}"/>
                             <CheckBox Content="Connect Accounts on Startup" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top" IsEnabled="False"/>
@@ -119,17 +122,146 @@
                     </DataGrid>
                     <TextBox x:Name="ChatMessageSend" Margin="110,0,10,10" TextWrapping="NoWrap" Text="{Binding MessageToSend, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Height="23" VerticalAlignment="Bottom" IsEnabled="{Binding IsBotConnected, UpdateSourceTrigger=PropertyChanged}">
                         <TextBox.InputBindings>
-                            <KeyBinding Key="Return" Command="{Binding CmdSendMessage}" CommandParameter="{Binding ElementName=ChatMessageSend, Path=Text, UpdateSourceTrigger=PropertyChanged}"/>
+                            <KeyBinding Key="Return" Command="{Binding CmdSendMessage}" CommandParameter="{Binding ElementName=ChatMessageSend, Path=Text}"/>
                         </TextBox.InputBindings>
                     </TextBox>
                     <ComboBox Margin="10,0,0,10" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="95" ItemsSource="{Binding ChatAccounts}" SelectedItem="{Binding SelectedAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsBotConnected, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </TabItem>
-            <TabItem Header="Giveaways" IsEnabled="False">
-                
- 
+            <TabItem Header="Giveaways" IsEnabled="{Binding Main.IsBotConnected, UpdateSourceTrigger=PropertyChanged}">
+                <Grid Background="#FFE5E5E5" DataContext="{Binding Giveaways}">
+                    <TabControl ItemsSource="{Binding GiveawayModules}">
+                        <TabControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ID, StringFormat=Giveaway {0}}"/>
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+                        <TabControl.ContentTemplate>
+                            <DataTemplate>
+                                <Grid Background="#FFE5E5E5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="520"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <GroupBox Header="{Binding ID}" HeaderStringFormat="GIVEAWAY {0} SETTINGS" Height="203" VerticalAlignment="Top" HorizontalContentAlignment="Center" Grid.Column="1" IsEnabled="{Binding IsActive, Converter={StaticResource InverseBool}}" Margin="0,10,0,0">
+                                        <Grid>
+                                            <Label Content="Keyword:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="60" Height="25"/>
+                                            <TextBox HorizontalAlignment="Left" Height="25" Margin="75,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding Keyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Keyword to enter the giveaway."/>
+                                            <Label Content="Prize:" HorizontalAlignment="Left" Margin="200,10,0,0" VerticalAlignment="Top" Height="25" Width="40"/>
+                                            <TextBox HorizontalAlignment="Left" Height="25" Margin="245,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="233" Text="{Binding Prize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="The price that can be won from the giveaway."/>
+                                            <CheckBox Content="Keyword Ignore Case" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" IsChecked="{Binding IgnoreCase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines if the keyword has to be an exact match in capatalization."/>
+                                            <Label Content="Run Time:" HorizontalAlignment="Left" Margin="10,86,0,0" VerticalAlignment="Top" Width="65" Height="25"/>
+                                            <Label Content="minutes." HorizontalAlignment="Left" Margin="125,86,0,0" VerticalAlignment="Top" Width="60" Height="25"/>
+                                            <TextBox HorizontalAlignment="Left" Height="25" Margin="80,86,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="40" Text="{Binding RunTimeMinutes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Runtime in minutes, will auto-close after set time has passed. Can be canceled with 'Stop Timer' button or set to 0 to disable."/>
+                                            <CheckBox Content="Auto Draw Winner on Closure." HorizontalAlignment="Left" Margin="10,116,0,0" VerticalAlignment="Top" IsChecked="{Binding IsAutoDraw, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines to auto-draw a first winner when the giveaway is automatically closed. Ignored when manually closed."/>
+                                            <CheckBox Content="Announce Half and 10s Time Left." HorizontalAlignment="Left" Margin="10,136,0,0" VerticalAlignment="Top" IsChecked="{Binding IsAnnounceTimeLeft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines if the bot should announce half time and 10 seconds time left of the giveaway."/>
+                                            <CheckBox Content="Play Sound at 10s Time Left." HorizontalAlignment="Left" Margin="10,156,0,0" VerticalAlignment="Top" IsChecked="{Binding IsPlaySound, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines if the bot should play a selected audio file when 10 seconds are left of the giveaway."/>
+                                            <Button Content="Select Audio" HorizontalAlignment="Left" Margin="183,153,0,0" VerticalAlignment="Top" Width="75" Command="{Binding CmdSelectAudioFile}"/>
+                                            <Label Content="Subscriber Luck:" HorizontalAlignment="Left" Margin="298,56,0,0" VerticalAlignment="Top" Width="100" Height="25"/>
+                                            <TextBox HorizontalAlignment="Left" Height="25" Margin="403,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="40" Text="{Binding SubscriberLuck, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Amount of tickets a subscriber enters at. Set to 1 to disable."/>
+                                            <Label Content="Response Time:" HorizontalAlignment="Left" Margin="298,124,0,0" VerticalAlignment="Top" Width="100" Height="25"/>
+                                            <TextBox HorizontalAlignment="Left" Height="25" Margin="403,124,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="40" Text="{Binding ResponseTimeSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="The amount of time a winner has to reply in chat before being auto-rerolled. Can be canceled with 'Stop Timer' or set below 10 to disable."/>
+                                            <Label Content="seconds." HorizontalAlignment="Left" Margin="448,124,0,0" VerticalAlignment="Top" Width="60" Height="25"/>
+                                            <Label Content="Entries." HorizontalAlignment="Left" Margin="448,56,0,0" VerticalAlignment="Top" Width="60" Height="25"/>
+                                            <CheckBox Content="Follow Required to Enter." HorizontalAlignment="Left" Margin="298,84,0,0" VerticalAlignment="Top" IsChecked="{Binding IsFollowRequired, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines if a follow is required to be eligible to win, is checked during draw. Subscriber overrules this check."/>
+                                            <CheckBox Content="Winners can Re-Enter Giveaway." HorizontalAlignment="Left" Margin="298,104,0,0" VerticalAlignment="Top" IsChecked="{Binding IsWinnersCanReEnter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines if a winner in the winners list can reenter the giveaway."/>
+                                            <CheckBox Content="Exclude Subscribers to Respond." HorizontalAlignment="Left" Margin="298,154,0,0" VerticalAlignment="Top" IsChecked="{Binding IsExcludeSubsToResponse, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Determines if subscribers do not have to reply to win if 'Response Time' has been set."/>
+                                        </Grid>
+                                    </GroupBox>
+                                    <Label Content="ENTRIES" Margin="10,10,10,0" VerticalAlignment="Top" Height="25" Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                    <ListView Margin="10,40,10,10" Grid.Column="0" ItemsSource="{Binding Entries}">
+                                        <ListView.Resources>
+                                            <ContextMenu x:Key="EntriesContextMenu">
+                                                <MenuItem Header="_Remove" Icon="{StaticResource IconDeleteAccount}" Command="{Binding Path=DataContext.CmdRemoveEntry, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" CommandParameter="{Binding}" Height="24"/>
+                                            </ContextMenu>
+                                        </ListView.Resources>
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="{x:Type ListViewItem}">
+                                                <Setter Property="ContextMenu" Value="{StaticResource EntriesContextMenu}"/>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridView.ColumnHeaderContainerStyle>
+                                                    <Style TargetType="GridViewColumnHeader">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </Style>
+                                                </GridView.ColumnHeaderContainerStyle>
+                                                <GridViewColumn Header="Name" Width="auto" DisplayMemberBinding="{Binding DisplayName}"/>
+                                                <GridViewColumn Header="Tickets" Width="auto" DisplayMemberBinding="{Binding Tickets}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                    <Label Content="WINNERS" Margin="10,10,10,0" VerticalAlignment="Top" Height="25" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                    <ListView Margin="10,40,10,10" Grid.Column="2" ItemsSource="{Binding Winners}">
+                                        <ListView.Resources>
+                                            <ContextMenu x:Key="WinnersContextMenu">
+                                                <MenuItem Header="_Remove" Icon="{StaticResource IconDeleteAccount}" Command="{Binding Path=DataContext.CmdRemoveWinner, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" CommandParameter="{Binding}" Height="24"/>
+                                            </ContextMenu>
+                                        </ListView.Resources>
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="{x:Type ListViewItem}">
+                                                <Setter Property="ContextMenu" Value="{StaticResource WinnersContextMenu}"/>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.View>
+                                            <GridView>
+                                                <GridView.ColumnHeaderContainerStyle>
+                                                    <Style TargetType="GridViewColumnHeader">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </Style>
+                                                </GridView.ColumnHeaderContainerStyle>
+                                                <GridViewColumn Header="Name" Width="auto" DisplayMemberBinding="{Binding DisplayName}"/>
+                                                <GridViewColumn Header="Prize" Width="auto" DisplayMemberBinding="{Binding Prize}"/>
+                                            </GridView>
+                                        </ListView.View>
+                                    </ListView>
+                                    <Button Content="Open" HorizontalAlignment="Left" Margin="10,218,0,0" VerticalAlignment="Top" Width="55" Height="30" Grid.Column="1" Command="{Binding CmdOpen, UpdateSourceTrigger=PropertyChanged}" ToolTip="Opens a new giveaway, clearing the entry list in the process."/>
+                                    <Button Content="Reopen" HorizontalAlignment="Left" Margin="70,218,0,0" VerticalAlignment="Top" Width="55" Height="30" Grid.Column="1" Command="{Binding CmdReOpen, UpdateSourceTrigger=PropertyChanged}" ToolTip="ReOpens previous giveaway, keeps the entry list intact."/>
+                                    <Button Content="Close" HorizontalAlignment="Left" Margin="130,218,0,0" VerticalAlignment="Top" Width="55" Height="30" Grid.Column="1" Command="{Binding CmdClose, UpdateSourceTrigger=PropertyChanged}" ToolTip="Closes an active giveaway, will not auto-draw a winner if enabled."/>
+                                    <Button Content="Draw" HorizontalAlignment="Left" Margin="190,218,0,0" VerticalAlignment="Top" Width="55" Height="30" Grid.Column="1" Command="{Binding CmdDraw, UpdateSourceTrigger=PropertyChanged}" ToolTip="Draw a new random winner from the entry list."/>
+                                    <Button Content="Redraw" HorizontalAlignment="Left" Margin="250,218,0,0" VerticalAlignment="Top" Width="55" Height="30" Grid.Column="1" Command="{Binding CmdRedraw, UpdateSourceTrigger=PropertyChanged}" ToolTip="ReDraws a new winner, the previous winner is removed as winner from the winners list."/>
+                                    <Button Content="Cancel Timer" HorizontalAlignment="Right" Margin="0,218,100,0" VerticalAlignment="Top" Width="80" Height="30" Grid.Column="1" Command="{Binding CmdCancelTimer, UpdateSourceTrigger=PropertyChanged}" ToolTip="When giveaway is opened it cancels auto-close timer if set. If a winner has been picked cancels auto-redraw and adds selected winner to winners list."/>
+                                    <Button Content="Clear Winners" Margin="0,218,10,0" VerticalAlignment="Top" Height="30" Grid.Column="1" HorizontalAlignment="Right" Width="85" Command="{Binding CmdClearWinners, UpdateSourceTrigger=PropertyChanged}" ToolTip="Clears all winners from the winners list."/>
+                                    <Label Content="{Binding ElapsedOpenTime, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" ContentStringFormat="{}{0:mm\:ss}" Margin="10,253,0,0" HorizontalContentAlignment="Center" HorizontalAlignment="Left" Width="100" Grid.Column="1" VerticalContentAlignment="Center" Height="40" VerticalAlignment="Top"/>
+                                    <Label Content="{Binding ElapsedNoResponseTime, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" ContentStringFormat="{}{0:mm\:ss}" Margin="0,253,10,0" HorizontalContentAlignment="Center" Grid.Column="1" VerticalContentAlignment="Center" Height="40" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100"/>
+                                    <Label Content="{Binding SelectedWinner, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="115,253,115,0" HorizontalContentAlignment="Center" FontWeight="Bold" FontSize="20" Height="40" Grid.Column="1" VerticalAlignment="Top">
+                                        <Label.Style>
+                                            <Style TargetType="Label">
+                                                <Setter Property="Foreground" Value="OrangeRed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding WinnerHasReplied, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                                                        <Setter Property="Foreground" Value="ForestGreen"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Label.Style>
+                                    </Label>
+                                    <DataGrid view:DataGridBehavior.Autoscroll="True" Margin="0,298,0,10" AutoGenerateColumns="False" HeadersVisibility="None" ItemsSource="{Binding WinnerMessages}" HorizontalContentAlignment="Center" Grid.Column="1">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Time" Width="40" IsReadOnly="True" Binding="{Binding ShortTime}"/>
+                                            <DataGridTemplateColumn Header="Name" Width="120" IsReadOnly="True">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding DisplayName}" Foreground="{Binding Color}"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="Message" Width="*" IsReadOnly="True" Binding="{Binding Message}"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </DataTemplate>
+                        </TabControl.ContentTemplate>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+            <TabItem Header="TestTab">
+                <Grid>
+
+                </Grid>
             </TabItem>
         </TabControl>
-
     </Grid>
 </Window>
