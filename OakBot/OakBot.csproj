@@ -146,7 +146,6 @@
     <Compile Include="Model\TwitchPubSubService\ITwitchPubSubService.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubPayload.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
-    <Compile Include="ViewModel\ExampleViewModel.cs" />
     <Compile Include="ViewModel\SubDB.cs" />
     <Compile Include="ViewModel\SubTrain.cs" />
     <Compile Include="ViewModel\SubWelcomeModel.cs" />
@@ -235,9 +234,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Folder Include="Model\Giveaway\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\OakBot.Common\OakBot.Common.csproj">
       <Project>{a3cd149b-7e95-4cf3-92dc-d98fc9c1c761}</Project>

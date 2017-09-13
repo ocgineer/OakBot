@@ -20,8 +20,7 @@ namespace OakBot.ViewModel
         private static string dbFile = "C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db";
         private static string trainFile = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\HighestTrain.txt";
 
-        private IChatConnectionService _chat;
-        private IBinFileService _bin;
+        private IChatConnectionService _chat;        
 
         private SubDB _subDB = new SubDB();
 
@@ -38,14 +37,13 @@ namespace OakBot.ViewModel
         private int _trainDayHigh = 8;
         private int _trainHigh = 0;
 
-        public SubWelcomeModel(IChatConnectionService chat, IBinFileService bin)
+        public SubWelcomeModel(IChatConnectionService chat)
         {
             // Register to the shutdown notification
             Messenger.Default.Register<NotificationMessage>(this, "shutdown", (msg) => { _vm_OnShutdown(); });
 
             // Set refferences to services
             _chat = chat; // Twitch chat service
-            _bin = bin;   // Load/Save VM settings .bin files
 
             // Register to events
             _chat.RawMessageReceived += _chat_RawMessageReceived;
