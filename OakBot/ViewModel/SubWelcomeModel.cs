@@ -35,7 +35,7 @@ namespace OakBot.ViewModel
         private int _subCount;
 
         private int _trainCount = 0;
-        private int _trainDayHigh = 0;
+        private int _trainDayHigh = 8;
         private int _trainHigh = 0;
 
         public SubWelcomeModel(IChatConnectionService chat, IBinFileService bin)
@@ -186,11 +186,11 @@ namespace OakBot.ViewModel
                     }
                     if (_trainCount > _trainDayHigh)
                     {
-                        _trainDayHigh += _trainCount;
+                        _trainDayHigh = _trainCount;
 
                         if (_trainDayHigh > _trainHigh)
                         {
-                            _trainHigh += _trainDayHigh;
+                            _trainHigh = _trainDayHigh;
 
                             // Save Highest Sub Train
                             var tw = new StreamWriter(trainFile);
@@ -198,8 +198,8 @@ namespace OakBot.ViewModel
                             tw.Close();
                         }
                     }
-
                 }
+
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Resub)
                 {
                     _subCount += 1;
@@ -305,11 +305,11 @@ namespace OakBot.ViewModel
 
                     if (_trainCount > _trainDayHigh)
                     {
-                        _trainDayHigh += _trainCount;
+                        _trainDayHigh = _trainCount;
 
                         if (_trainDayHigh > _trainHigh)
                         {
-                            _trainHigh += _trainDayHigh;
+                            _trainHigh = _trainDayHigh;
 
                             // Save Highest Sub Train
                             var tw = new StreamWriter(trainFile);
