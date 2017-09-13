@@ -120,7 +120,13 @@ namespace OakBot.Model
         /// Color string of the used background color of the banner on the channel.
         /// </summary>
         [JsonProperty("profile_banner_background_color")]
-        public string ProfileBannerColor { get; protected set; }
+        public string ProfileBannerBackgroundColor { get; protected set; }
+
+        /// <summary>
+        /// Description of the channel.
+        /// </summary>
+        [JsonProperty("description")]
+        public string Description { get; protected set; }
 
         #region Authenticated GetChannel() Properties
 

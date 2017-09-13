@@ -15,11 +15,14 @@ namespace OakBot.Model
 
         public MainSettings()
         {
-            // Required initialization because UI performs
-            // string manipulations on these variables.
+            // Default values
             Channel = string.Empty;
             BotUsername = string.Empty;
+            BotOauthKey = string.Empty;
             CasterUsername = string.Empty;
+            CasterOauthKey = string.Empty;
+            AutoConnectStartup = false;
+            UseSecureConnection = false;
         }
     }
 }

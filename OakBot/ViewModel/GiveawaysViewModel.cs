@@ -17,18 +17,16 @@ namespace OakBot.ViewModel
 
         private readonly IChatConnectionService _chatService;
         private readonly IWebSocketEventService _wsEventService;
-        private readonly IBinFileService _binFileService;
 
         private readonly Random _rnd;
         private ObservableCollection<GiveawayViewModel> _modules;
 
         #endregion
 
-        public GiveawaysViewModel(IChatConnectionService chat, IBinFileService bin, IWebSocketEventService wsevent)
+        public GiveawaysViewModel(IChatConnectionService chat, IWebSocketEventService wsevent)
         {
             // Store references to services
             _chatService = chat;
-            _binFileService = bin;
             _wsEventService = wsevent;
 
             // Use one seeded pseudo-random generator for all giveaway modules
