@@ -4,92 +4,55 @@ using Newtonsoft.Json;
 
 namespace OakBot.Model
 {
-    public class GiveawayWebsocketEventData
+    /// <summary>
+    /// Base class for the giveaway websocket event data, containing module id.
+    /// </summary>
+    public class GiveawayWebsocketEventBase
     {
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
         [JsonProperty("module_id")]
-        public int ModuleId { get; set; }
+        public int ModuleId { get; private set; }
 
-        #region OPEN event data
+        public GiveawayWebsocketEventBase(int moduleId)
+        {
+            ModuleId = moduleId;
+        } 
+    }
 
+    /// <summary>
+    /// OPEN giveaway websocket event data.
+    /// </summary>
+    public class GiveawayWebsocketEventOpen : GiveawayWebsocketEventBase
+    {
         [JsonProperty("keyword")]
-        public string Keyword { get; set; }
+        public string Keyword { get; private set; }
 
         [JsonProperty("keyword_ignore_case")]
-        public bool KeywordCaseInsensitive { get; set; }
+        public bool KeywordCaseInsensitive { get; private set; }
 
         [JsonProperty("prize")]
-        public string Prize { get; set; }
+        public string Prize { get; private set; }
 
         [JsonProperty("following_required")]
-        public bool FollowingRequired { get; set; }
+        public bool FollowingRequired { get; private set; }
 
         [JsonProperty("subscriber_only")]
-        public bool SubscriberOnly { get; set; }
+        public bool SubscriberOnly { get; private set; }
 
         [JsonProperty("has_open_time")]
-        public bool HasOpenTime { get; set; }
+        public bool HasOpenTime { get; private set; }
 
         [JsonProperty("open_time_minutes")]
-        public int OpenTime { get; set; }
+        public int OpenTime { get; private set; }
 
         [JsonProperty("opened_at")]
-        public DateTime OpenedAt { get; set; }
+        public DateTime OpenedAt { get; private set; }
 
         [JsonProperty("closing_at")]
-        public DateTime ClosingAt { get; set; }
+        public DateTime ClosingAt { get; private set; }
 
-        #endregion
-
-        #region CLOSE event data
-
-        [JsonProperty("closed_at")]
-        public DateTime ClosedAt { get; set; }
-
-        [JsonProperty("total_entries")]
-        public int TotalEntries { get; set; }
-
-        #endregion
-
-        #region DRAW event data
-
-        [JsonProperty("selected_winner")]
-        public string SelectedWinner { get; set; }
-
-        [JsonProperty("drawn_at")]
-        public DateTime DrawnAt { get; set; }
-
-        [JsonProperty("has_response_time")]
-        public bool HasResponseTime { get; set; }
-
-        [JsonProperty("response_time_seconds")]
-        public int ResponseTimeSeconds { get; set; }
-
-        [JsonProperty("redrawing_at")]
-        public DateTime RedrawingAt { get; set; }
-
-        #endregion
-
-        #region DONE event data
-
-        [JsonProperty("done")]
-        public bool Done { get; set; }
-
-        #endregion
-
-        /// <summary>
-        /// Constructor used to create OPEN event data.
-        /// </summary>
-        /// <param name="moduleId">Module Id creating the event.</param>
-        /// <param name="settings">Module settings to create data object.</param>
-        /// <param name="openedTimestamp">Opened timestamp of the giveaway.</param>
-        public GiveawayWebsocketEventData(int moduleId, GiveawayModuleSettings settings, DateTime openedTimestamp)
+        public GiveawayWebsocketEventOpen(int moduleId, GiveawayModuleSettings settings, DateTime openedTimestamp) 
+            : base(moduleId)
         {
-            Type = "OPEN";
-            ModuleId = moduleId;
-
             Keyword = settings.Keyword;
             KeywordCaseInsensitive = settings.KeywordCaseInsensitive;
             Prize = settings.Prize;
@@ -102,49 +65,70 @@ namespace OakBot.Model
             OpenedAt = openedTimestamp;
             ClosingAt = openedTimestamp.Add(new TimeSpan(0, settings.OpenTimeMinutes, 0));
         }
+    }
 
-        /// <summary>
-        /// Constructor used to create CLOSE event data.
-        /// </summary>
-        /// <param name="moduleId">Module Id creating the event.</param>
-        /// <param name="totalEntries">Total entries in the giveaway.</param>
-        /// <param name="closedTimestamp">Closure timestamp of the giveaway.</param>
-        public GiveawayWebsocketEventData(int moduleId, int totalEntries, DateTime closedTimestamp)
+    /// <summary>
+    /// ENTRY giveaway websocket event data.
+    /// </summary>
+    public class GiveawayWebsocketEventEntry : GiveawayWebsocketEventBase
+    {
+        [JsonProperty("entry_display_name")]
+        public string EntryDisplayName { get; private set; }
+
+        [JsonProperty("total_entries")]
+        public int TotalEntries { get; private set; }
+
+        public GiveawayWebsocketEventEntry(int moduleId, string displayName, int totalEntries)
+            : base(moduleId)
         {
-            Type = "CLOSE";
-            ModuleId = moduleId;
+            EntryDisplayName = displayName;
+            TotalEntries = totalEntries;
+        }
+    }
+    
+    /// <summary>
+    /// CLOSE giveaway websocket event data.
+    /// </summary>
+    public class GiveawayWebsocketEventClose : GiveawayWebsocketEventBase
+    {
+        [JsonProperty("closed_at")]
+        public DateTime ClosedAt { get; private set; }
 
+        [JsonProperty("total_entries")]
+        public int TotalEntries { get; private set; }
+
+        public GiveawayWebsocketEventClose(int moduleId, int totalEntries, DateTime closedTimestamp)
+            : base(moduleId)
+        {
             ClosedAt = closedTimestamp;
             TotalEntries = totalEntries;
         }
+    }
 
-        /// <summary>
-        /// Constructor used to create DRAW event data.
-        /// </summary>
-        /// <param name="moduleId">Module Id creating the event.</param>
-        /// <param name="settings">Module settings to create data object.</param>
-        /// <param name="winner">Selected winner of the giveaway</param>
-        public GiveawayWebsocketEventData(int moduleId, GiveawayModuleSettings settings, DateTime drawTimestamp, GiveawayEntry winner)
+    /// <summary>
+    /// DRAW giveaway websocket event data.
+    /// </summary>
+    public class GiveawayWebsocketEventDraw : GiveawayWebsocketEventBase
+    {
+        [JsonProperty("selected_winner")]
+        public string SelectedWinner { get; private set; }
+
+        [JsonProperty("drawn_at")]
+        public DateTime DrawnAt { get; private set; }
+
+        [JsonProperty("response_time_seconds")]
+        public int ResponseTimeSeconds { get; private set; }
+
+        [JsonProperty("redrawing_at")]
+        public DateTime RedrawingAt { get; private set; }
+
+        public GiveawayWebsocketEventDraw(int moduleId, GiveawayModuleSettings settings, DateTime drawTimestamp, GiveawayEntry winner)
+            : base(moduleId)
         {
-            Type = "DRAW";
-            ModuleId = moduleId;
-
             SelectedWinner = winner.DisplayName;
-            HasResponseTime = settings.ResponseTimeSeconds < 10 ? false : true;
+            DrawnAt = drawTimestamp;
             ResponseTimeSeconds = settings.ResponseTimeSeconds;
-            RedrawingAt = drawTimestamp.Add(new TimeSpan(0, 0, settings.ResponseTimeSeconds, 0));
-        }
-
-        /// <summary>
-        /// Constructor used to create DONE event data.
-        /// </summary>
-        /// <param name="moduleId">Module Id creating the event.</param>
-        public GiveawayWebsocketEventData(int moduleId)
-        {
-            Type = "DONE";
-            ModuleId = moduleId;
-
-            Done = true;
+            RedrawingAt = drawTimestamp.Add(new TimeSpan(0, 0, settings.ResponseTimeSeconds));
         }
     }
 }

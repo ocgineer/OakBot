@@ -41,7 +41,7 @@ namespace OakBot.Model
             {
                 // Given token during handshake matches > CONNECTED event             
                 this.SendAsync(JsonConvert.SerializeObject(
-                    new WebSocketEventPayload("AUTHENTICATED", "Welcome to OakBot Websocket!")), null);
+                    new WebSocketEventPayload("AUTHENTICATED", null)), null);
             }
             else
             {
