@@ -52,4 +52,61 @@ namespace OakBot.Model
             }
         }
     }
+
+    public static class TimeSpanExtensions
+    {
+        /// <summary>
+        /// TimeSpan Custom string output format. [x hour(s) x minute(s)] or [x minute(s)]
+        /// </summary>
+        public static string ToHoursMinutesString(this TimeSpan ts)
+        {
+            string format = "";
+
+            if (ts.Hours > 1)
+            {
+                format += "h' hours '";
+            }
+            else if (ts.Hours == 1)
+            {
+                format += "h' hour '";
+            }
+
+            if (ts.Minutes == 1)
+            {
+                format += "m' minute'";
+            }
+            else
+            {
+                format += "m' minutes'";
+            }
+            return ts.ToString(format);
+        }
+
+        /// <summary>
+        /// TimeSpan Custom string output format. [x minute(s) x second(s)] or [x second(s)]
+        /// </summary>
+        public static string ToMinutesSecondsString(this TimeSpan ts)
+        {
+            string format = "";
+
+            if (ts.Minutes > 1)
+            {
+                format += "m' minutes '";
+            }
+            else if (ts.Minutes == 1)
+            {
+                format += "m' minute '";
+            }
+
+            if (ts.Seconds == 1)
+            {
+                format += "s' second'";
+            }
+            else
+            {
+                format += "s' seconds'";
+            }
+            return ts.ToString(format);
+        }
+    }
 }

@@ -44,7 +44,6 @@ namespace OakBot.ViewModel
                 SimpleIoc.Default.Register<IChatConnectionService, ChatConnectionService>();
                 SimpleIoc.Default.Register<IWebSocketEventService, WebSocketEventService>();
                 SimpleIoc.Default.Register<ITwitchPubSubService, TwitchPubSubService>();
-                SimpleIoc.Default.Register<IBinFileService, BinFileService>();
             }
 
             // Register ViewModels instanciated on use by a View

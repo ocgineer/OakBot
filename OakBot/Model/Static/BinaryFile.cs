@@ -24,6 +24,7 @@ namespace OakBot.Model
 
         // Instance locking
         private static object _lock = new object();
+        private static object _lockEnc = new object();
 
         #endregion
 
@@ -32,9 +33,9 @@ namespace OakBot.Model
         /// <summary>
         /// Write a serializable object to an unencrypted binary file.
         /// </summary>
-        /// <param name="filename">The name of the file, without extention, to be used.</param>
+        /// <param name="filename">Name of the file, without extention.</param>
         /// <param name="serializable">A serializable tagged object to store in a binary file.</param>
-        /// <returns>On success: true, false otherwise.</returns>
+        /// <returns>True on success, false otherwise.</returns>
         public static bool WriteBinFile(string filename, object serializable)
         {
             lock (_lock)
@@ -65,7 +66,7 @@ namespace OakBot.Model
         /// <summary>
         /// Deserialize an unecrypted binary file to a serializable object.
         /// </summary>
-        /// <param name="filename">The name of the file, without extention, to be read.</param>
+        /// <param name="filename">Name of the file, without extention.</param>
         /// <returns>Deserialized object (requires casting), null on error or file not found.</returns>
         public static object ReadBinFile(string filename)
         {
@@ -97,74 +98,91 @@ namespace OakBot.Model
 
         #region Encrypted Binary Files
 
+        /// <summary>
+        /// Write a serializable object to an encrypted binary file.
+        /// </summary>
+        /// <param name="filename">Name of the file, without extention.</param>
+        /// <param name="serializable">A serializable tagged object to store in a binary file.</param>
+        /// <returns></returns>
         public static bool WriteEncryptedBinFile(string filename, object serializable)
         {
-            // Initialize bin directory if needed
-            if (!Directory.Exists(BinFilesPath))
-                Directory.CreateDirectory(BinFilesPath);
-
-            // Initialize a symmetric algorithm and set Key and IV
-            Rijndael cryptor = Rijndael.Create();
-            cryptor.KeySize = 128;
-            cryptor.Key = CypherKey;
-            cryptor.IV = CypherIV;
-
-            //DESCryptoServiceProvider cryptor = new DESCryptoServiceProvider()
-            //{
-            //    Key = CypherKey,
-            //    IV = CypherIV
-            //};
-
-            try
+            lock (_lockEnc)
             {
-                using (FileStream fs = new FileStream($"{BinFilesPath}\\{filename}.bin", FileMode.Create, FileAccess.Write, FileShare.None))
-                using (CryptoStream cs = new CryptoStream(fs, cryptor.CreateEncryptor(), CryptoStreamMode.Write))
+                // Initialize bin directory if needed
+                if (!Directory.Exists(BinFilesPath))
+                    Directory.CreateDirectory(BinFilesPath);
+
+                // Initialize a symmetric algorithm and set Key and IV
+                Rijndael cryptor = Rijndael.Create();
+                cryptor.KeySize = 128;
+                cryptor.Key = CypherKey;
+                cryptor.IV = CypherIV;
+
+                //DESCryptoServiceProvider cryptor = new DESCryptoServiceProvider()
+                //{
+                //    Key = CypherKey,
+                //    IV = CypherIV
+                //};
+
+                try
                 {
-                    // Serialize .net object to binary
-                    (new BinaryFormatter()).Serialize(cs, serializable);
-                    //(new XmlSerializer(type)).Serialize(cs, serializable);
-                }
+                    using (FileStream fs = new FileStream($"{BinFilesPath}\\{filename}.bin", FileMode.Create, FileAccess.Write, FileShare.None))
+                    using (CryptoStream cs = new CryptoStream(fs, cryptor.CreateEncryptor(), CryptoStreamMode.Write))
+                    {
+                        // Serialize .net object to binary
+                        (new BinaryFormatter()).Serialize(cs, serializable);
+                        //(new XmlSerializer(type)).Serialize(cs, serializable);
+                    }
 
-                return true;
-            }
-            catch
-            {
-                return false;
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
 
+        /// <summary>
+        /// Deserialize an encrypted binary file to a serializable object.
+        /// </summary>
+        /// <param name="filename">Name of the file, without extention.</param>
+        /// <returns>Deserialized object (requires casting), null on error or file not found.</returns>
         public static object ReadEncryptedBinFile(string filename)
         {
-            // File does not exists, return null
-            if (!File.Exists($"{BinFilesPath}\\{filename}.bin"))
-                return null;
-
-            // Init a symmetric algorithm and set Key and IV
-            Rijndael cryptor = Rijndael.Create();
-            cryptor.KeySize = 128;
-            cryptor.Key = CypherKey;
-            cryptor.IV = CypherIV;
-
-            //DESCryptoServiceProvider cryptor = new DESCryptoServiceProvider()
-            //{
-            //    Key = CypherKey,
-            //    IV = CypherIV
-            //};
-
-            try
+            lock (_lockEnc)
             {
-                using (FileStream fs = new FileStream($"{BinFilesPath}\\{filename}.bin", FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (CryptoStream cs = new CryptoStream(fs, cryptor.CreateDecryptor(), CryptoStreamMode.Read))
+                // File does not exists, return null
+                if (!File.Exists($"{BinFilesPath}\\{filename}.bin"))
+                    return null;
+
+                // Init a symmetric algorithm and set Key and IV
+                Rijndael cryptor = Rijndael.Create();
+                cryptor.KeySize = 128;
+                cryptor.Key = CypherKey;
+                cryptor.IV = CypherIV;
+
+                //DESCryptoServiceProvider cryptor = new DESCryptoServiceProvider()
+                //{
+                //    Key = CypherKey,
+                //    IV = CypherIV
+                //};
+
+                try
                 {
-                    // Deserialize binary to .net object
-                    return (new BinaryFormatter()).Deserialize(cs);
-                    //return (new XmlSerializer(type)).Deserialize(cs);
-                }
+                    using (FileStream fs = new FileStream($"{BinFilesPath}\\{filename}.bin", FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (CryptoStream cs = new CryptoStream(fs, cryptor.CreateDecryptor(), CryptoStreamMode.Read))
+                    {
+                        // Deserialize binary to .net object
+                        return (new BinaryFormatter()).Deserialize(cs);
+                        //return (new XmlSerializer(type)).Deserialize(cs);
+                    }
 
-            }
-            catch
-            {
-                return null;
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
 

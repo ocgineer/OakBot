@@ -175,7 +175,7 @@ namespace OakBot.Model
                             break;
                 
                         case "emotes":
-                            UsedEmotes = tag.Groups["value"].Value.Split('/');
+                            UsedEmotes = new List<string>(tag.Groups["value"].Value.Split('/'));
                             break;
                 
                         case "room-id":
@@ -404,12 +404,12 @@ namespace OakBot.Model
         /// <summary>
         /// List of badges the user has.
         /// </summary>
-        public IList<string> Badges { get; private set; }
+        public List<string> Badges { get; private set; }
 
         /// <summary>
         /// List of emotes ids used in the message.
         /// </summary>
-        public IList<string> UsedEmotes { get; private set; }
+        public List<string> UsedEmotes { get; private set; }
 
         /// <summary>
         /// Channel Id of the channel the message was send in.

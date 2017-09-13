@@ -23,7 +23,6 @@ namespace OakBot.ViewModel
         // Services
         private readonly IChatConnectionService _ccs;
         private readonly IWebSocketEventService _wse;
-        private readonly IBinFileService _bfh;
 
         private MainSettings _mainSettings;
 
@@ -37,14 +36,13 @@ namespace OakBot.ViewModel
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
-        public MainViewModel(IChatConnectionService ccs, IBinFileService bfh, IWebSocketEventService wse)
+        public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse)
         {          
             Title = "OakBot - YATB";
 
             // Set dependency injection references
             _ccs = ccs;
             _wse = wse;
-            _bfh = bfh;
 
             // Initialize collections
             _chatAccounts = new ObservableCollection<ITwitchAccount>();
@@ -59,10 +57,10 @@ namespace OakBot.ViewModel
             _wse.SetApiToken("oakbotapitest");
 
             // Load settings
-            var loaded = _bfh.ReadEncryptedBinFile("LoginSettings");
+            var loaded = BinaryFile.ReadEncryptedBinFile("LoginSettings");
             if (loaded != null && loaded is MainSettings)
             {
-                // Cast to actual settings class
+                // Success, set last saved settings
                 _mainSettings = (MainSettings)loaded;
 
                 // Set loaded settings values through properties for UI
@@ -89,8 +87,7 @@ namespace OakBot.ViewModel
             }
             else
             {
-                // Settings file does not exist or reading file went wrong
-                // so we set startup with a clean settings template to use.
+                // Failure, load defaults
                 _mainSettings = new MainSettings();
             }
             
@@ -102,7 +99,7 @@ namespace OakBot.ViewModel
 
         private void OnSettingsChanged()
         {
-            _bfh.WriteEncryptedBinFile("LoginSettings", _mainSettings);
+            BinaryFile.WriteEncryptedBinFile("LoginSettings", _mainSettings);
             _ccs.SetJoiningChannel(_mainSettings.Channel, _isUsingSSL);
         }
 
@@ -653,6 +650,5 @@ namespace OakBot.ViewModel
         }
 
         #endregion
-
     }
 }

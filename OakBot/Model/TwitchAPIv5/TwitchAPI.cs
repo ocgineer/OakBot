@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace OakBot.Model
 {
@@ -44,7 +45,7 @@ namespace OakBot.Model
         /// </summary>
         /// <param name="usernames"><see cref="IEnumerable{string}"/> of Twitch usernames to get.</param>
         /// <returns><see cref="IEnumerable{User}"/> of <see cref="User"/> objects.</returns>
-        public static async Task<IEnumerable<User>> TranslateUsernames(IEnumerable<string> usernames)
+        public static async Task<IEnumerable<User>> GetUsers(IEnumerable<string> usernames)
         {
             // Create an empty list to fill with results
             List<User> TranslatedUsers = new List<User>();
@@ -56,7 +57,7 @@ namespace OakBot.Model
                 foreach (var batch in usernames.Select((x, index) => new { x, index }).GroupBy(x => x.index / 100, y => y.x))
                 {
                     // Translate this batch of max 100 selected names
-                    TranslatedUsers.AddRange(await TranslateUsernames(batch));
+                    TranslatedUsers.AddRange(await GetUsers(batch));
 
                     // Delay 500ms before requesting API endpoint again.
                     await Task.Delay(1000);
@@ -87,6 +88,7 @@ namespace OakBot.Model
 
         /// <summary>
         /// Gets a single user object for the specified Twitch login name.
+        /// https://dev.twitch.tv/docs/v5/reference/users#get-users
         /// </summary>
         /// <param name="name">Twitch username to get user object for.</param>
         /// <returns><see cref="User"/> object on success, null otherwise.</returns>
@@ -137,6 +139,53 @@ namespace OakBot.Model
                 throw new Exception($"{((HttpWebResponse)ex.Response).StatusCode}");
             }
         }
+
+        #endregion
+
+        #region Streams [1/5 Endpoints]
+        /* https://dev.twitch.tv/docs/v5/reference/streams */
+
+        /// <summary>
+        /// WARNING: HACKY METHOD 1000ms between API calls, Future will only accept userids
+        /// Gets stream information for a specified user.
+        /// https://dev.twitch.tv/docs/v5/reference/streams#get-stream-by-user
+        /// </summary>
+        /// <param name="channelName">username of the user to fetch the stream from.</param>
+        /// <returns>Returns <see cref="TwitchStream"/> when a stream is live, null if not or on error.</returns>
+        public static async Task<TwitchStream> GetStreamByUser(string channelName)
+        {
+            try
+            {
+                // Make the request to get user id from username
+                User user = await GetUsers(channelName);
+                if (user == null)
+                    return null;
+                await Task.Delay(500);
+                
+                // Make the request
+                var blob = await TwitchApiRequests.GetRequest($"https://api.twitch.tv/kraken/streams/{user.Id}");
+
+                // Deserialize into a JObject, not using reflection here yet.
+                JToken blobObj = JObject.Parse(blob);
+
+                // Check if 'stream' value is given or not 
+                if (blobObj["stream"] != null)
+                {
+                    // Stream is online, return TwitchStream object
+                    return blobObj.SelectToken("stream").ToObject<TwitchStream>();
+                }
+                else
+                {
+                    // Stream is offline, return null
+                    return null;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
 
         #endregion
     }

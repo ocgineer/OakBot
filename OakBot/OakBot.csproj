@@ -127,6 +127,7 @@
     </ApplicationDefinition>
     <Compile Include="Model\Giveaway\GiveawayEntry.cs" />
     <Compile Include="Model\Giveaway\GiveawayModuleSettings.cs" />
+    <Compile Include="Model\Giveaway\GiveawayWebsocketEventData.cs" />
     <Compile Include="Model\Static\Authentication.cs" />
     <Compile Include="AuthenticationWindow.xaml.cs">
       <DependentUpon>AuthenticationWindow.xaml</DependentUpon>
@@ -140,6 +141,7 @@
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follower.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follows.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\GetUsers.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\TwitchStream.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\User.cs" />
     <Compile Include="Model\TwitchPubSubService\ITwitchPubSubService.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubPayload.cs" />
@@ -154,8 +156,6 @@
     <Compile Include="ViewModel\GiveawaysViewModel.cs" />
     <Compile Include="ViewModel\GiveawayViewModel.cs" />
     <Compile Include="View\DataGridBehavior.cs" />
-    <Compile Include="Model\BinFileService\BinFileService.cs" />
-    <Compile Include="Model\BinFileService\IBinFileService.cs" />
     <Compile Include="Model\ChatConnectionService\ChatConnectionService.cs" />
     <Compile Include="Model\ChatConnectionService\ChatConnectionServiceEventArgs.cs" />
     <Compile Include="Model\ChatConnectionService\IChatConnectionService.cs" />

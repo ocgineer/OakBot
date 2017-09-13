@@ -14,49 +14,44 @@ using OakBot.Model;
 
 namespace OakBot.ViewModel
 {
-    /* TODO:
-     * - Chat commands
-     * - Send WebSocket Events
-     */
-
     public class GiveawayViewModel : ViewModelBase
     {
         #region Fields
 
+        // Services
         private readonly IChatConnectionService _chatService;
         private readonly IWebSocketEventService _wsEventService;
         private readonly int _moduleId;
         private Random _rndGen;
 
-        private MediaPlayer _mediaPlayer;
-
-        GiveawayModuleSettings _moduleSettings;
-        
+        // Required items
         private Timer _timerOpen;
         private Timer _timerResponse;
         private Timer _timerElapsed;
-
         private DateTime _timestampDraw;
         private DateTime _timestampOpened;
         private DateTime _timestampClosed;
-
         private TimeSpan _elapsedOpenTime;
         private TimeSpan _elapsedNoResponseTime;
         private TimeSpan _elapsedInterval;
-        
         private bool _isActive;
         private bool _isClosing;
         private bool _isHavingEntries;
         private bool _isDrawingWinner;
         private bool _WinnerHasReplied;
-
         private List<GiveawayEntry> _drawList;
         private GiveawayEntry _selectedWinner;
-
         private ObservableCollection<GiveawayEntry> _listEntries;
         private ObservableCollection<GiveawayEntry> _listWinners;
         private ObservableCollection<TwitchChatMessage> _listMessagesWinner;
 
+        /* TODO: Make and Use SFX Service /w NAUDIO */
+        private MediaPlayer _mediaPlayer; 
+
+        // This modules settings
+        GiveawayModuleSettings _moduleSettings;
+
+        // Command interfacing for binding
         private ICommand _cmdOpen;
         private ICommand _cmdReOpen;
         private ICommand _cmdClose;
@@ -72,12 +67,19 @@ namespace OakBot.ViewModel
 
         #region Constructors
 
-        public GiveawayViewModel(int id, Random rndGen, IChatConnectionService cs, IWebSocketEventService wes)
+        /// <summary>
+        /// Initializes a new Giveaway module, seperate from other modules.
+        /// </summary>
+        /// <param name="id">Id of the module, must be unique and can't be lower than 1.</param>
+        /// <param name="rndGen">A preseeded pseudo random generator to be used in the module.</param>
+        /// <param name="ccs">Chat Service to receive and send messages.</param>
+        /// <param name="wes">WebSocket Event Service to push out giveaway events to websocket.</param>
+        public GiveawayViewModel(int id, Random rndGen, IChatConnectionService ccs, IWebSocketEventService wes)
         {
             // Store references
             _moduleId = id;
             _rndGen = rndGen;
-            _chatService = cs;
+            _chatService = ccs;
             _wsEventService = wes;
 
             // Initialize collections and lists
@@ -113,7 +115,7 @@ namespace OakBot.ViewModel
             var loaded = BinaryFile.ReadBinFile($"GivewawayModule{ID}");
             if (loaded != null && loaded is GiveawayModuleSettings)
             {
-                // success load last saved settings and set previous winners
+                // Success, set last saved settings and set previous winners
                 _moduleSettings = (GiveawayModuleSettings)loaded;
                 if (_moduleSettings.SavedWinnersList?.Count > 0)
                 {
@@ -122,9 +124,13 @@ namespace OakBot.ViewModel
             }
             else
             {
-                // failure load defaults
+                // Failure, load defaults
                 _moduleSettings = new GiveawayModuleSettings();
             }
+
+            // Transmit WS event
+            _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
+                new GiveawayWebsocketEventData(_moduleId));
 
             // Register to service events and system broadcast messages
             _chatService.ChatMessageReceived += _chatService_ChatMessageReceived;
@@ -159,10 +165,10 @@ namespace OakBot.ViewModel
             if (reopen)
             {
                 // Send a Chat Message with reopened info
-                string message = $"A giveaway for {Prize} has reopened";
-                message += RunTimeMinutes > 0 ? $" for another {RunTimeMinutes} minutes! " : "! ";
+                string message = $"A giveaway for '{Prize}' has reopened";
+                message += OpenTimeMinutes > 0 ? $" for another {OpenTimeMinutes} minutes! " : "! ";
                 message += IsFollowRequired ? "Following the channel is required to be eligible to win. " : "";
-                message += $"Type in < {Keyword} > to enter this giveaway, if you already have entered before you don't have to type again.";
+                message += $"Type in '{Keyword}' to enter this giveaway, if you already have entered before you don't have to type again.";
                 _chatService.SendMessage(message, false);
             }
             else
@@ -181,10 +187,10 @@ namespace OakBot.ViewModel
                 });
 
                 // Send new giveaway opened message
-                string message = $"A giveaway for {Prize} has opened";
-                message += RunTimeMinutes > 0 ? $" for {RunTimeMinutes} minutes! " : "! ";
+                string message = $"A giveaway for '{Prize}' has opened";
+                message += OpenTimeMinutes > 0 ? $" for {OpenTimeMinutes} minutes! " : "! ";
                 message += IsFollowRequired ? "Following the channel is required to be eligible to win. " : "";
-                message += $"Type in < {Keyword} > to enter this giveaway.";
+                message += $"Type in '{Keyword}' to enter this giveaway.";
                 _chatService.SendMessage(message, false);
             }
 
@@ -193,19 +199,49 @@ namespace OakBot.ViewModel
             ElapsedOpenTime = new TimeSpan(0);
 
             // Start open timer if required
-            if (RunTimeMinutes > 0)
+            if (OpenTimeMinutes > 0)
             {
-                _timerOpen.Interval = (RunTimeMinutes * 60000);
+                _timerOpen.Interval = (OpenTimeMinutes * 60000);
                 _timerOpen.Start();
             }
 
             // Transmit WS event
-            /* TODO: WEBSOCKET EVENT ON GIVEAWAY OPENED */
+            _wsEventService.SendRegisteredEvent("GIVEAWAY_OPENED",
+                new GiveawayWebsocketEventData(_moduleId, _moduleSettings, _timestampOpened));
 
             // Save current settings values to file
             SaveSettings();
         }
 
+        /// <summary>
+        /// Open a new giveaway with new keyword, prize and optional open- and response-time.
+        /// </summary>
+        /// <param name="keyword">New keyword to be used to enter.</param>
+        /// <param name="prize">New prize to be given away.</param>
+        /// <param name="openTime">Optional: Giveaway open time in minutes.</param>
+        /// <param name="responseTime">Optional: Winner response time in seconds.</param>
+        private void Open(string keyword, string prize, int? openTime = null, int? responseTime = null)
+        {
+            // Ignore if giveaway is already active else set active
+            if (_isActive || _isClosing || _isDrawingWinner)
+            {
+                return;
+            }
+
+            // Set new keyword and prize
+            Keyword = keyword;
+            Prize = prize;
+
+            // Set Open- (and Response-) time if set.
+            OpenTimeMinutes = openTime ??
+                _moduleSettings.OpenTimeMinutes;
+            ResponseTimeSeconds = responseTime ??
+                _moduleSettings.ResponseTimeSeconds;
+
+            // Open giveaway normally
+            this.Open(false);
+        }
+     
         /// <summary>
         /// Closes an active giveaway and prepares a draw list to draw from.
         /// Ignores if no giveaway is active or is in the process of closing.
@@ -227,10 +263,11 @@ namespace OakBot.ViewModel
             _timestampClosed = DateTime.UtcNow;
             
             // Send a Chat Message with closure info
-            _chatService.SendMessage($"The giveaway for {Prize} has now been closed. A total of {_listEntries.Count} eligible viewer(s) have entered.", false);
+            _chatService.SendMessage($"The giveaway for '{Prize}' has now been closed. A total of {_listEntries.Count} eligible viewer(s) have entered.", false);
 
             // Transmit WS event
-            /* TODO: WEBSOCKET EVENT ON GIVEAWAY CLOSE */
+            _wsEventService.SendRegisteredEvent("GIVEAWAY_CLOSED",
+                new GiveawayWebsocketEventData(_moduleId, _listEntries.Count, _timestampClosed));
 
             // Clone entries list to a draw list and shuffle one time
             _drawList = new List<GiveawayEntry>(_listEntries);
@@ -315,7 +352,8 @@ namespace OakBot.ViewModel
                 _chatService.SendMessage("There are no entries left to draw from so nobody has won.", false);
 
                 // Transmit WS event
-                /* TODO: WEBSOCKET EVENT ON NO ENTRIES LEFT */
+                _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
+                    new GiveawayWebsocketEventData(_moduleId));
 
                 // Stop Draw function
                 return;
@@ -360,7 +398,7 @@ namespace OakBot.ViewModel
             if ((_moduleSettings.ExcludeSubscriberToRespond && SelectedWinner.IsSubscriber) || _moduleSettings.ResponseTimeSeconds < 10)
             {
                 // Send chat message of the new winner, no reply required
-                string message = $"{SelectedWinner} you have won the giveaway for {Prize}!";
+                string message = $"{SelectedWinner} you have won the giveaway for '{Prize}'!";
                 _chatService.SendMessage(message, false);
 
                 // Control, winner does not have to reply
@@ -372,13 +410,17 @@ namespace OakBot.ViewModel
                     _listWinners.Add(SelectedWinner);
                 });
 
+                // Transmit WS event
+                _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
+                    new GiveawayWebsocketEventData(_moduleId));
+
                 // Save current winners list after winners list is done updating
                 SaveSettings();
             }
             else
             {
                 // Send chat message of the new winner, timed response
-                string message = $"{SelectedWinner} you have won the giveaway for {Prize}! ";
+                string message = $"{SelectedWinner} you have won the giveaway for '{Prize}'! ";
                 message += $"Please reply within {ResponseTimeSeconds} seconds in the chat to claim your prize. ";
                 _chatService.SendMessage(message, false);
 
@@ -386,6 +428,10 @@ namespace OakBot.ViewModel
                 _timerResponse.Interval = (ResponseTimeSeconds * 1000);
                 _timerResponse.Start();
                 WinnerHasReplied = false;
+
+                // Transmit WS event
+                _wsEventService.SendRegisteredEvent("GIVEAWAY_DRAW",
+                    new GiveawayWebsocketEventData(_moduleId, _moduleSettings, _timestampDraw, _selectedWinner));
             }
 
             // Done drawing a winner, unlock
@@ -662,8 +708,14 @@ namespace OakBot.ViewModel
                     // Set winner has replied
                     WinnerHasReplied = true;
 
-                    // Stop response timer and add to winners list
+                    // Stop response timer
                     _timerResponse.Stop();
+
+                    // Transmit WS event
+                    _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
+                        new GiveawayWebsocketEventData(_moduleId));
+
+                    // Add winner to winners list
                     await DispatcherHelper.RunAsync(() =>
                     {
                         _listWinners.Add(SelectedWinner);
@@ -678,6 +730,100 @@ namespace OakBot.ViewModel
                 {
                     _listMessagesWinner.Add(e.ChatMessage);
                 });
+            }
+
+            // Command structure
+            if (e.ChatMessage.Message.StartsWith("!raffle", StringComparison.InvariantCultureIgnoreCase)
+                // Only moderators and the broadcaster can use the !raffle command
+                /* TODO: Other rights when implemented in the bot */
+                && (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster"))))
+
+            {
+                // split the command on whitespaces to retrieve the arguments of the command
+                string[] cmdArgs = e.ChatMessage.Message.Split((char[])null, 3, StringSplitOptions.RemoveEmptyEntries);
+
+                // First giveaway module (id = 1) can be adddessed with !raffle and no id.
+                // If module has another id than 1 it needs to be specifically addressed with !raffle<id>
+                string addressing = string.IsNullOrEmpty(cmdArgs[0].Substring(7)) ? "1" : cmdArgs[0].Substring(7);
+                if (addressing != _moduleId.ToString())
+                {
+                    return;
+                }
+
+                // Module is addressed check what arguments the !raffle command has
+                if (cmdArgs.Length > 2 && cmdArgs[1].Equals("open", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    string[] openArgs = cmdArgs[2].Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    switch (openArgs.Length)
+                    {
+                        // !raffle open <keyword>|<description>
+                        // Open a new giveaway with new keyword and description
+                        case 2:
+                            Open(openArgs[0], openArgs[1]);
+                            break;
+
+                        // !raffle open <keyword>|<description>|<run-time-min>
+                        // Open a new giveaway with new keyword, description, and overrides runtime
+                        case 3:
+                            if (!Int32.TryParse(openArgs[2], out int parsedRunTime))
+                            {
+                                // Invalid time given, set to disabled open time
+                                parsedRunTime = 0;
+                            }
+                            Open(openArgs[0], openArgs[1], parsedRunTime);
+                            break;
+
+                        // !raffle open <keyword>|<description>|<run-time-min>|<response-time-sec>
+                        // Open a new giveaway with new keyword, description, overrides runtime, and overrides responsetime
+                        case 4:
+                            int parsedResponseTime;
+                            if (!Int32.TryParse(openArgs[2], out int parsedRunTime2))
+                            {
+                                // Invalid number given, set to disabled open time
+                                parsedRunTime2 = 0;
+                            }   
+                            if (!Int32.TryParse(openArgs[3], out parsedResponseTime))
+                            {
+                                // Invalid number given, set to disable response time
+                                parsedResponseTime = 0;
+                            }  
+                            Open(openArgs[0], openArgs[1], parsedRunTime2, parsedResponseTime);
+                            break;
+                    }
+                }
+                // Single argument used
+                else if (cmdArgs.Length == 2)
+                {
+                    if (cmdArgs[1].Equals("open", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.Open();
+                    }
+                    else if (cmdArgs[1].Equals("reopen", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.Open(true);
+                    }
+                    else if (cmdArgs[1].Equals("close", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.Close();
+                    }
+                    else if (cmdArgs[1].Equals("draw", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.Draw();
+                    }
+                    else if (cmdArgs[1].Equals("redraw", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.Draw(true);
+                    }
+                    else if (cmdArgs[1].Equals("clearwinners", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.ClearWinners();
+                    }
+                    else if (cmdArgs[1].Equals("stoptimer", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        this.StopOpenResponseTimer();
+                    }
+                }
             }
         }
 
@@ -846,7 +992,7 @@ namespace OakBot.ViewModel
         /// <summary>
         /// Amount of minutes the giveaway will be open for.
         /// </summary>
-        public int RunTimeMinutes
+        public int OpenTimeMinutes
         {
             get
             {
