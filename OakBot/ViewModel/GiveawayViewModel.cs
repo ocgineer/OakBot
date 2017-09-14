@@ -61,6 +61,7 @@ namespace OakBot.ViewModel
         private ICommand _cmdCancelTimer;
         private ICommand _cmdRemoveEntry;
         private ICommand _cmdRemoveWinner;
+        private ICommand _cmdSendTwitchMessage;
         private ICommand _cmdSelectAudioFile;
 
         #endregion
@@ -130,7 +131,7 @@ namespace OakBot.ViewModel
 
             // Transmit WS event
             _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
-                new GiveawayWebsocketEventData(_moduleId));
+                new GiveawayWebsocketEventBase(_moduleId));
 
             // Register to service events and system broadcast messages
             _chatService.ChatMessageReceived += _chatService_ChatMessageReceived;
@@ -207,7 +208,7 @@ namespace OakBot.ViewModel
 
             // Transmit WS event
             _wsEventService.SendRegisteredEvent("GIVEAWAY_OPENED",
-                new GiveawayWebsocketEventData(_moduleId, _moduleSettings, _timestampOpened));
+                new GiveawayWebsocketEventOpen(_moduleId, _moduleSettings, _timestampOpened, _listEntries.Count));
 
             // Save current settings values to file
             SaveSettings();
@@ -267,7 +268,7 @@ namespace OakBot.ViewModel
 
             // Transmit WS event
             _wsEventService.SendRegisteredEvent("GIVEAWAY_CLOSED",
-                new GiveawayWebsocketEventData(_moduleId, _listEntries.Count, _timestampClosed));
+                new GiveawayWebsocketEventClose(_moduleId, _listEntries.Count, _timestampClosed));
 
             // Clone entries list to a draw list and shuffle one time
             _drawList = new List<GiveawayEntry>(_listEntries);
@@ -353,7 +354,7 @@ namespace OakBot.ViewModel
 
                 // Transmit WS event
                 _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
-                    new GiveawayWebsocketEventData(_moduleId));
+                    new GiveawayWebsocketEventBase(_moduleId));
 
                 // Stop Draw function
                 return;
@@ -412,7 +413,7 @@ namespace OakBot.ViewModel
 
                 // Transmit WS event
                 _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
-                    new GiveawayWebsocketEventData(_moduleId));
+                    new GiveawayWebsocketEventBase(_moduleId));
 
                 // Save current winners list after winners list is done updating
                 SaveSettings();
@@ -431,7 +432,7 @@ namespace OakBot.ViewModel
 
                 // Transmit WS event
                 _wsEventService.SendRegisteredEvent("GIVEAWAY_DRAW",
-                    new GiveawayWebsocketEventData(_moduleId, _moduleSettings, _timestampDraw, _selectedWinner));
+                    new GiveawayWebsocketEventDraw(_moduleId, _moduleSettings, _timestampDraw, _selectedWinner));
             }
 
             // Done drawing a winner, unlock
@@ -442,7 +443,7 @@ namespace OakBot.ViewModel
         /// Validates person trying to enter and adds to entries list if eligible.
         /// </summary>
         /// <param name="message"></param>
-        private void AddEntry(TwitchChatMessage message)
+        private async void AddEntry(TwitchChatMessage message)
         {
             // If the person is already in the entry list ignore the entry
             if (_listEntries.Any(x => x.UserId == message.UserId))
@@ -462,13 +463,17 @@ namespace OakBot.ViewModel
                 return;
             }
 
+            // Control Flags
+            IsHavingEntries = true;
+
             // Eligible to enter giveaway
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
+            await DispatcherHelper.RunAsync(() =>
             {
                 _listEntries.Add(new GiveawayEntry
                 {
                     ChannelId = message.ChannelId,
                     UserId = message.UserId,
+                    Username = message.Author,
                     DisplayName = message.DisplayName,
                     IsSubscriber = message.IsSubscriber,
                     Tickets = message.IsSubscriber ? SubscriberLuck : 1,
@@ -476,8 +481,9 @@ namespace OakBot.ViewModel
                 });
             });
 
-            // Control Flags
-            IsHavingEntries = true;
+            // Send entry data after done adding to entries list
+            _wsEventService.SendRegisteredEvent("GIVEAWAY_ENTRY",
+                new GiveawayWebsocketEventEntry(_moduleId, message.DisplayName, _listEntries.Count));
         }
 
         /// <summary>
@@ -713,7 +719,7 @@ namespace OakBot.ViewModel
 
                     // Transmit WS event
                     _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
-                        new GiveawayWebsocketEventData(_moduleId));
+                        new GiveawayWebsocketEventBase(_moduleId));
 
                     // Add winner to winners list
                     await DispatcherHelper.RunAsync(() =>
@@ -1350,6 +1356,22 @@ namespace OakBot.ViewModel
                 return _cmdRemoveWinner ??
                     (_cmdRemoveWinner = new RelayCommand<GiveawayEntry>(
                         (item) => RemoveSelectedItem(item, true)));
+            }
+        }
+
+        public ICommand CmdSendTwitchMessage
+        {
+            get
+            {
+                return _cmdSendTwitchMessage ??
+                    (_cmdSendTwitchMessage = new RelayCommand<GiveawayEntry>(
+                        (item) =>
+                        {
+                            if (Uri.TryCreate($"https://www.twitch.tv/message/compose?to={item.Username}", UriKind.Absolute, out Uri url))
+                            {
+                                System.Diagnostics.Process.Start(url.AbsoluteUri);
+                            }
+                        }));
             }
         }
 
