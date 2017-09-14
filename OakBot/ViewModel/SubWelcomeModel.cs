@@ -34,7 +34,7 @@ namespace OakBot.ViewModel
         private int _subCount;
 
         private int _trainCount = 0;
-        private int _trainDayHigh = 8;
+        private int _trainDayHigh = 0;
         private int _trainHigh = 0;
 
         public SubWelcomeModel(IChatConnectionService chat)
