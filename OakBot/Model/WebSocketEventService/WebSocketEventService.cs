@@ -29,7 +29,15 @@ namespace OakBot.Model
             _server = new WebSocketServer(System.Net.IPAddress.Any, 1337);
 
             // Start ws server without service the service
-            _server.Start();
+            try
+            {
+                _server.Start();
+            }
+            catch
+            {
+                // Another websocket is already using 1337
+            }
+            
         }
 
         #endregion

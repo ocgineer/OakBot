@@ -50,7 +50,13 @@ namespace OakBot.Model
         [JsonProperty("closing_at")]
         public DateTime ClosingAt { get; private set; }
 
-        public GiveawayWebsocketEventOpen(int moduleId, GiveawayModuleSettings settings, DateTime openedTimestamp) 
+        /// <summary>
+        /// Used for ReOpen to attach current entries count
+        /// </summary>
+        [JsonProperty("current_entries")]
+        public int CurrentEntries { get; private set; }
+
+        public GiveawayWebsocketEventOpen(int moduleId, GiveawayModuleSettings settings, DateTime openedTimestamp, int currentEntries) 
             : base(moduleId)
         {
             Keyword = settings.Keyword;
@@ -64,6 +70,8 @@ namespace OakBot.Model
 
             OpenedAt = openedTimestamp;
             ClosingAt = openedTimestamp.Add(new TimeSpan(0, settings.OpenTimeMinutes, 0));
+
+            CurrentEntries = currentEntries;
         }
     }
 

@@ -8,7 +8,7 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("OakBot")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Yet Another Twitch Bot")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Ocgineer")]
 [assembly: AssemblyProduct("OakBot")]

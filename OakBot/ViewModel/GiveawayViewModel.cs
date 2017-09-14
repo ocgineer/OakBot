@@ -61,6 +61,7 @@ namespace OakBot.ViewModel
         private ICommand _cmdCancelTimer;
         private ICommand _cmdRemoveEntry;
         private ICommand _cmdRemoveWinner;
+        private ICommand _cmdSendTwitchMessage;
         private ICommand _cmdSelectAudioFile;
 
         #endregion
@@ -207,7 +208,7 @@ namespace OakBot.ViewModel
 
             // Transmit WS event
             _wsEventService.SendRegisteredEvent("GIVEAWAY_OPENED",
-                new GiveawayWebsocketEventOpen(_moduleId, _moduleSettings, _timestampOpened));
+                new GiveawayWebsocketEventOpen(_moduleId, _moduleSettings, _timestampOpened, _listEntries.Count));
 
             // Save current settings values to file
             SaveSettings();
@@ -472,6 +473,7 @@ namespace OakBot.ViewModel
                 {
                     ChannelId = message.ChannelId,
                     UserId = message.UserId,
+                    Username = message.Author,
                     DisplayName = message.DisplayName,
                     IsSubscriber = message.IsSubscriber,
                     Tickets = message.IsSubscriber ? SubscriberLuck : 1,
@@ -1354,6 +1356,22 @@ namespace OakBot.ViewModel
                 return _cmdRemoveWinner ??
                     (_cmdRemoveWinner = new RelayCommand<GiveawayEntry>(
                         (item) => RemoveSelectedItem(item, true)));
+            }
+        }
+
+        public ICommand CmdSendTwitchMessage
+        {
+            get
+            {
+                return _cmdSendTwitchMessage ??
+                    (_cmdSendTwitchMessage = new RelayCommand<GiveawayEntry>(
+                        (item) =>
+                        {
+                            if (Uri.TryCreate($"https://www.twitch.tv/message/compose?to={item.Username}", UriKind.Absolute, out Uri url))
+                            {
+                                System.Diagnostics.Process.Start(url.AbsoluteUri);
+                            }
+                        }));
             }
         }
 
