@@ -51,7 +51,7 @@ namespace OakBot.Model
         {
             lock (_lock)
             {
-                _register.RemoveAll(tup => tup.Item1 == clientId && tup.Item2 == wsevent);
+                _register.RemoveAll(x => x.Item1 == wsevent && x.Item2 == clientId);
             }
         }
 
@@ -68,15 +68,28 @@ namespace OakBot.Model
         }
 
         /// <summary>
-        /// Returns a IEnumerable for each client registered for given event.
+        /// Get a IEnumerable containing each client that registered for given event.
         /// </summary>
         /// <param name="wsevent">Event name.</param>
-        /// <returns>IEnumerable of client IDs registerd for given event. </returns>
-        public IEnumerable<string> GetClientsSubscirbedEvent(string wsevent)
+        /// <returns>IEnumerable of client IDs registerd for given event.</returns>
+        public IEnumerable<string> GetClientsSubscirbedForEvent(string wsevent)
         {
             lock (_lock)
             {
                 return _register.Where(x => x.Item1 == wsevent).Select(y => y.Item2);
+            }
+        }
+
+        /// <summary>
+        /// Get a IEnumerable containing each event the given client registered for.
+        /// </summary>
+        /// <param name="clientId">Client Id.</param>
+        /// <returns>IEnumerable of events the client Id is registered for.</returns>
+        public IEnumerable<string> GetEventsSubscribedByClient(string clientId)
+        {
+            lock (_lock)
+            {
+                return _register.Where(x => x.Item2 == clientId).Select(y => y.Item1);
             }
         }
 

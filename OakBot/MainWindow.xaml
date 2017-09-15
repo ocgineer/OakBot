@@ -180,6 +180,11 @@
                                                 <MenuItem Header="_Remove" Icon="{StaticResource IconDeleteAccount}" Command="{Binding Path=DataContext.CmdRemoveEntry, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" CommandParameter="{Binding}" Height="24"/>
                                             </ContextMenu>
                                         </ListView.Resources>
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="{x:Type ListViewItem}">
+                                                <Setter Property="ContextMenu" Value="{StaticResource EntriesContextMenu}"/>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
                                         <ListView.View>
                                             <GridView>
                                                 <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding DisplayName}"/>
@@ -195,6 +200,11 @@
                                                 <MenuItem Header="_Send Twitch Message" Icon="{StaticResource IconEmail}" Command="{Binding Path=DataContext.CmdSendTwitchMessage, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}" CommandParameter="{Binding}" Height="24"/>
                                             </ContextMenu>
                                         </ListView.Resources>
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="{x:Type ListViewItem}">
+                                                <Setter Property="ContextMenu" Value="{StaticResource WinnersContextMenu}"/>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
                                         <ListView.View>
                                             <GridView>
                                                 <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding DisplayName}"/>
