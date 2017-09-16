@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Timers;
-
-namespace OakBot.ViewModel
+﻿namespace OakBot.ViewModel
 {
     public class SubTrain 
     {
@@ -16,6 +10,7 @@ namespace OakBot.ViewModel
             Train = new TrainTimer(interval, message, chat);
             
         }
+
         public bool IsTrain()
         {
             if (Train.Enabled)
@@ -43,9 +38,5 @@ namespace OakBot.ViewModel
         {
             Train.Start();
         }
-
-        
-
-
     }
 }

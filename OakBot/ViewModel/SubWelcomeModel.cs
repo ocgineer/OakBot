@@ -327,12 +327,12 @@ namespace OakBot.ViewModel
                     switch (message[0])
                     {
                         case "~subs":
-                            _chat.SendMessage("Total Subs Today: " + _subCount, false);
+                            _chat.SendMessage("Subs Today: " + _subCount, false);
                             break;
                         case "~train":
                             if (_train.IsTrain())
                             {
-                                _chat.SendMessage("Train Length: " + _trainCount + " - Time Until Departure: " + _train.GetTime() + " - Longest Train Today: " + _trainDayHigh + " - Longest Train All Time: " + _trainHigh, false);
+                                _chat.SendMessage("Train Length: " + _trainCount + " - Train Departure: " + _train.GetTime() + " - Longest Train Today: " + _trainDayHigh + " - Longest Train All Time: " + _trainHigh, false);
                             }
                             else
                             {

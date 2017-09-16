@@ -232,7 +232,9 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\OakBot.Common\OakBot.Common.csproj">
@@ -252,12 +254,7 @@
       <Name>OakBot.Utility</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Resource Include="oak.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="oakbot.ico" />
   </ItemGroup>
