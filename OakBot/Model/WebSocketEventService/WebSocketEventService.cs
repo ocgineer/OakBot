@@ -91,7 +91,7 @@ namespace OakBot.Model
         public void SendRegisteredEvent(string wsevent, object data)
         {
             // Get clients registered for given event
-            var clients = _register.GetClientsSubscirbedEvent(wsevent);
+            var clients = _register.GetClientsSubscirbedForEvent(wsevent);
 
             // Continue if any registered clients
             if (clients.Count() > 0)

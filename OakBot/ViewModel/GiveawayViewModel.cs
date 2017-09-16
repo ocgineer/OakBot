@@ -267,9 +267,19 @@ namespace OakBot.ViewModel
             _chatService.SendMessage($"The giveaway for '{Prize}' has now been closed. A total of {_listEntries.Count} eligible viewer(s) have entered.", false);
 
             // Transmit WS event
-            _wsEventService.SendRegisteredEvent("GIVEAWAY_CLOSED",
-                new GiveawayWebsocketEventClose(_moduleId, _listEntries.Count, _timestampClosed));
-
+            if (_isHavingEntries)
+            {
+                // Giveaway has entries, closed event
+                _wsEventService.SendRegisteredEvent("GIVEAWAY_CLOSED",
+                    new GiveawayWebsocketEventClose(_moduleId, _listEntries.Count, _timestampClosed));
+            }
+            else
+            {
+                // Giveaway has no entries, done event
+                _wsEventService.SendRegisteredEvent("GIVEAWAY_DONE",
+                    new GiveawayWebsocketEventBase(_moduleId));
+            }
+            
             // Clone entries list to a draw list and shuffle one time
             _drawList = new List<GiveawayEntry>(_listEntries);
             _drawList.Shuffle(_rndGen);

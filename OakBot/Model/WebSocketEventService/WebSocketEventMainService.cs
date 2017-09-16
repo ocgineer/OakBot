@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
@@ -59,48 +57,48 @@ namespace OakBot.Model
 
         protected override void OnMessage(MessageEventArgs e)
         {
-            // Client wants to subscribe to event(s)
-            if (e.Data.StartsWith("subscribe", StringComparison.CurrentCultureIgnoreCase))
+            // return if data is not text
+            if (!e.IsText)
             {
-                // Split remove empty, Get Distinct values, trim value and skip first element
-                var wsevents = e.Data.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Distinct(StringComparer.CurrentCultureIgnoreCase).Select(x => x.Trim()).Skip(1);
-
-                // Continue if events are given
-                if (wsevents.Count() > 0)
-                {
-                    // register each event in the registery
-                    foreach (string wsevent in wsevents)
-                    {
-                        _register.ClientSubscribeEvent(this.ID, wsevent);
-                    }
-
-                    // send a SUBSCRIBED event back with subbed events
-                    this.SendAsync(JsonConvert.SerializeObject(
-                        new WebSocketEventPayload("SUBSCRIBED", new { subscribed_events = wsevents })), null);
-                }
+                return;
             }
 
-            // Client wants to unsubscrive to event(s)
-            else if (e.Data.StartsWith("unsubscribe", StringComparison.CurrentCultureIgnoreCase))
+            try
             {
-                // Split remove empty, Get Distinct values, trim value and skip first element
-                var wsevents = e.Data.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Distinct(StringComparer.CurrentCultureIgnoreCase).Select(x => x.Trim()).Skip(1);
+                JToken blobObj = JObject.Parse(e.Data);
 
-                // Continue if events are given
-                if (wsevents.Count() > 0)
+                // Client wants to subscribe to events
+                if (blobObj["subscribe"] != null)
                 {
-                    // register each event in the registery
-                    foreach (string wsevent in wsevents)
+                    // register each given event
+                    foreach (string item in blobObj["subscribe"])
                     {
-                        _register.ClientUnsubscribeEvent(this.ID, wsevent);
+                        _register.ClientSubscribeEvent(this.ID, item);
                     }
-
-                    // send a UNSUBSCRIBED event back with unsubbed events
-                    this.SendAsync(JsonConvert.SerializeObject(
-                        new WebSocketEventPayload("UNSUBSCRIBED", new { unsubscribed_events = wsevents })), null);
                 }
+
+                // Client wants to unsubscribe from events
+                if (blobObj["unsubscribe"] != null)
+                {
+                    // unregister each given event
+                    foreach (string item in blobObj["unsubscribe"])
+                    {
+                        _register.ClientUnsubscribeEvent(this.ID, item);
+                    }
+                }
+
+                // If subscribed or unsubscribed happend, transmit all current subscribed events
+                if (blobObj["unsubscribe"] != null || blobObj["subscribe"] != null)
+                {
+                    // send list of registered events for by id
+                    this.SendAsync(JsonConvert.SerializeObject(
+                        new WebSocketEventPayload("SUBSCRIBED", _register.GetEventsSubscribedByClient(this.ID))), null);
+                }
+            }
+            catch
+            {
+                // unable to parse received data
+                return;
             }
         }
 
