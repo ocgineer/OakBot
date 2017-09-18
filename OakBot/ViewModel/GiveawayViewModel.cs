@@ -387,8 +387,7 @@ namespace OakBot.ViewModel
                 try
                 {
                     // Check if user is following the channel via Twitch API
-                    var following = await TwitchAPI.CheckUserFollowsByChannel(SelectedWinner.UserId, SelectedWinner.ChannelId);
-                    if (following == null)
+                    if (await TwitchAPI.GetUserIsFollowingTargetBool(SelectedWinner.UserId, SelectedWinner.ChannelId))
                     {
                         // Silently redraw
                         IsDrawingWinner = false;

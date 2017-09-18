@@ -19,6 +19,6 @@ namespace OakBot.Model
         /// List of `User` Models that got translated from the given usernames
         /// </summary>
         [JsonProperty("users")]
-        public List<User> Users { get; protected set; }
+        public List<v5User> Users { get; protected set; }
     }
 }

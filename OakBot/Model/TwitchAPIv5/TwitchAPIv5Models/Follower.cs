@@ -24,6 +24,6 @@ namespace OakBot.Model
         /// The `User` Model with the follower user information.
         /// </summary>
         [JsonProperty("user")]
-        public User User { get; protected set; }
+        public v5User User { get; protected set; }
     }
 }

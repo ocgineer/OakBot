@@ -3,20 +3,14 @@
     /// <summary>
     /// Enum with different TcpDisconnection reasons
     /// </summary>
-    public enum TcpDisconnectReason
+    public enum DisconnectReason
     {
         Unknown,
         ConnectionFailure,
         ReceiveFailure,
         TransmitFailure,
+        NoPongReceived,
         UserDisconnection,
-
-
-        ErrorConnecting,
-        ErrorReceiveData,
-        ErrorTransmitData,
-
-        ManualDisconnected,
         ReconnectRequest
     }
 }

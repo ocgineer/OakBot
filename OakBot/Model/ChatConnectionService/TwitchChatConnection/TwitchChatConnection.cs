@@ -20,7 +20,7 @@ namespace OakBot.Model
         private static readonly int RATELIMIT_NOMOD = 1500;
         //private static readonly int RATELIMIT_VERBOT = 600;
 
-        private TcpConnection _tcpClient;
+        private IrcTcpConnection _tcpClient;
         private TwitchCredentials _credentials;
         private string _joinedChannel;
 
@@ -47,7 +47,7 @@ namespace OakBot.Model
         public TwitchChatConnection()
         {
             // Initiate the TcpConnection and hook events
-            _tcpClient = new TcpConnection();
+            _tcpClient = new IrcTcpConnection();
             _tcpClient.Connected += _tcpClient_Connected;
             _tcpClient.Disconnected += _tcpClient_Disconnected;
             _tcpClient.MessageReceived += _tcpClient_MessageReceived;
@@ -61,7 +61,7 @@ namespace OakBot.Model
         /// Start connection to the Twitch IRC Chat.
         /// </summary>
         /// <param name="secure">Secure SSL connection or not.</param>
-        public async Task Connect(bool secure, TwitchCredentials credentials)
+        public async void Connect(bool secure, TwitchCredentials credentials)
         {
             _credentials = credentials;
             
@@ -83,7 +83,7 @@ namespace OakBot.Model
         public void Disconnect()
         {
             // Disconnected from TCP with a manual disconnection reason
-            _tcpClient.Disconnect(TcpDisconnectReason.ManualDisconnected);
+            _tcpClient.Disconnect(DisconnectReason.UserDisconnection);
 
             // Reset the ratelimit to ensure correct ratelimit on reconnection
             _tcpClient.RateLimit = RATELIMIT_NOMOD;
@@ -141,7 +141,7 @@ namespace OakBot.Model
         /// Event handler for TcpConnection.Connected
         /// Will request capabilities after connection
         /// </summary>
-        private void _tcpClient_Connected(object sender, TcpConnectedEventArgs e)
+        private void _tcpClient_Connected(object sender, IrcTcpConnectedEventArgs e)
         {
             // Enqueue CAP to Request Twitch Capabilities
             _tcpClient.EnqueueMessage("CAP REQ :twitch.tv/membership twitch.tv/commands twitch.tv/tags", true);
@@ -153,7 +153,7 @@ namespace OakBot.Model
         /// <summary>
         /// Event handler for TcpConnection.Disconnected
         /// </summary>
-        private void _tcpClient_Disconnected(object sender, TcpDisconnectedEventArgs e)
+        private void _tcpClient_Disconnected(object sender, IrcTcpDisconnectedEventArgs e)
         {
             // Fire Disconnected Event
             OnDisconnected(e.Reason);
@@ -164,7 +164,7 @@ namespace OakBot.Model
         /// Parsed the received raw message in a TwitchChatMessage
         /// Switches on the received command and executes what is needed
         /// </summary>
-        private void _tcpClient_MessageReceived(object sender, TcpMessageReceivedEventArgs e)
+        private void _tcpClient_MessageReceived(object sender, IrcTcpMessageEventArgs e)
         {
             // Create a TwitchMessage from the received message
             TwitchChatMessage twitchMsg = new TwitchChatMessage(e.RawMessage);
@@ -177,22 +177,28 @@ namespace OakBot.Model
 
             switch (twitchMsg.Command)
             {
+                // PING received
+                // Send back a PONG
+                case IrcCommand.Ping:
+                    _tcpClient.EnqueueMessage(twitchMsg.RawMessage.Replace("PING", "PONG"), true);
+                    break;
+                
+                // PONG received
+                // Stop TCP pong timer
+                case IrcCommand.Pong:
+                    _tcpClient.PongReceived();
+                    break;
+                
                 // Received PRIVMSG
                 // Invoke message received event
                 case IrcCommand.PrivMsg:
                     OnChatMessageReceived(twitchMsg);
                     break;
 
-                // Received PING
-                // Send a PONG back
-                case IrcCommand.Ping:
-                    _tcpClient.EnqueueMessage(twitchMsg.RawMessage.Replace("PING", "PONG"), true);
-                    break;
-
                 // Received Reconnection request
                 // Disconnect the connected TCP client with a reqonnect request reason
                 case IrcCommand.Reconnect:
-                    _tcpClient.Disconnect(TcpDisconnectReason.ReconnectRequest);
+                    _tcpClient.Disconnect(DisconnectReason.ReconnectRequest);
                     break;
 
                 // Received 376, last message of the MOTD after authentication
@@ -278,24 +284,24 @@ namespace OakBot.Model
             Connected?.Invoke(this, new TwitchChatConnectedEventArgs(_credentials));
         }
 
-        protected virtual void OnDisconnected(TcpDisconnectReason reason)
+        protected virtual void OnDisconnected(DisconnectReason reason)
         {
             string msg = string.Empty;
             switch (reason)
             {
-                case TcpDisconnectReason.ErrorConnecting:
+                case DisconnectReason.ConnectionFailure:
                     msg = "An error occured while connecting.";
                     break;
-                case TcpDisconnectReason.ErrorReceiveData:
+                case DisconnectReason.ReceiveFailure:
                     msg = "An error occured while receiving data.";
                     break;
-                case TcpDisconnectReason.ErrorTransmitData:
+                case DisconnectReason.TransmitFailure:
                     msg = "An error occured while transmitting data.";
                     break;
-                case TcpDisconnectReason.ManualDisconnected:
+                case DisconnectReason.UserDisconnection:
                     msg = "Manual disconnected from the chat.";
                     break;
-                case TcpDisconnectReason.ReconnectRequest:
+                case DisconnectReason.ReconnectRequest:
                     msg = "Twitch IRC Server requested to reconnect.";
                     break;
             }

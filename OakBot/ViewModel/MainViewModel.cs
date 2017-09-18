@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Linq;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Collections.ObjectModel;
@@ -23,6 +24,7 @@ namespace OakBot.ViewModel
         // Services
         private readonly IChatConnectionService _ccs;
         private readonly IWebSocketEventService _wse;
+        private readonly ITwitchPubSubService _pss;
 
         private MainSettings _mainSettings;
 
@@ -36,13 +38,15 @@ namespace OakBot.ViewModel
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
-        public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse)
+        public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse,
+            ITwitchPubSubService pss)
         {          
             Title = "OakBot - YATB";
 
             // Set dependency injection references
             _ccs = ccs;
             _wse = wse;
+            _pss = pss;
 
             // Initialize collections
             _chatAccounts = new ObservableCollection<ITwitchAccount>();
@@ -83,6 +87,9 @@ namespace OakBot.ViewModel
                     IsCasterOauthSet = true;
                     _casterCredentials = new TwitchCredentials(
                         _mainSettings.CasterUsername, _mainSettings.CasterOauthKey, true);
+
+                    // Try connection PubSub
+                    _pss.Connect(_casterCredentials);
                 }
             }
             else
@@ -649,6 +656,30 @@ namespace OakBot.ViewModel
             }
         }
 
+        private ICommand _cmdTestButton1;
+        public ICommand CmdTestButton1
+        {
+            get
+            {
+                return _cmdTestButton1 ??
+                    (_cmdTestButton1 = new RelayCommand(
+                        async () =>
+                        {
+
+                            /* init list at startup */
+                            var a = await TwitchAPI.GetUserLatestFollowings("50553721");
+                            var b = await TwitchAPI.GetUserLatestFollowers("50553721");
+
+
+
+
+
+
+
+                        }));
+            }
+        }
+        
         #endregion
     }
 }

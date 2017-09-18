@@ -7,11 +7,11 @@ using Newtonsoft.Json;
 
 namespace OakBot.Model
 {
-    internal static class TwitchApiRequests
+    internal static class TwitchAPIv5Requests
     {
         // Twitch API Private Client ID
         private static readonly string _clientId = "gtpc5vtk1r4u8fm9l45f9kg1fzezrv8";
-        
+
         /// <summary>
         /// Make a unauthenticated Twitch APIv5 GET request to the specified endpoint.
         /// </summary>
@@ -49,6 +49,7 @@ namespace OakBot.Model
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(endpoint));
             request.Accept = $"application/vnd.twitchtv.v5+json";
             request.Method = "GET";
+            request.Headers.Add("Client-ID", _clientId);
             request.Headers.Add("Authorization", $"OAuth {oauth}");
 
             // Get the request response, handle WebExceptions in the endpoint methods
@@ -100,5 +101,6 @@ namespace OakBot.Model
                 }
             }
         }
+
     }
 }

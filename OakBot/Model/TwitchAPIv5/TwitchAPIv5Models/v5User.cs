@@ -6,7 +6,7 @@ namespace OakBot.Model
     /// <summary>
     /// Class representing the `User` object returned from Twitch APIv5.
     /// </summary>
-    public class User
+    public class v5User
     {
         /// <summary>
         /// Id of the user.

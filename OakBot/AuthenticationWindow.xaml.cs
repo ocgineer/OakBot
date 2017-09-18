@@ -20,6 +20,11 @@ namespace OakBot
         // Twitch API Client ID
         private static readonly string TwitchClientId = "gtpc5vtk1r4u8fm9l45f9kg1fzezrv8";
 
+        /* New Twitch API scopes:
+         * user:edit                    Manage a user object.
+         * user:read:email              Read autorized user's email address.
+         */
+
         /* TWITCH APIv5 OAuth Scopes:
          * channel_check_subscription   Read whether a user is subscribed to your channel.
          * channel_commercial           Trigger commercials on channel.
@@ -30,11 +35,16 @@ namespace OakBot
          * channel_stream               Reset a channel’s stream key.
          * channel_subscriptions        Read all subscribers to your channel.
          * chat_login                   Log into chat and send messages.
+         * collections_edit             Manage a user's collections (of videos).
+         * communities_edit             Manage a user's communities.
+         * communities_moderate         Manage community moderators.
+         * openid                       Use OpenID Connect authentication.
          * user_blocks_edit             Turn on/off ignoring a user.
          * user_blocks_read             Read a user’s list of ignored users.
          * user_follows_edit            Manage a user’s followed channels.
          * user_read                    Read nonpublic user information, like email address.
          * user_subscriptions           Read a user’s subscriptions.
+         * viewing_activity_read        Turn on Viewer Heartbeat Service ability to record user data.
          */
 
         // Bot Account: Only chat login
@@ -42,7 +52,7 @@ namespace OakBot
             $"https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id={TwitchClientId}&redirect_uri=http://localhost&scope=chat_login&force_verify=true";
 
         // Streamer Account: chat login and control authorization
-        private readonly string TwitchAuthStreamer =
+        private static readonly string TwitchAuthStreamer =
             $"https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id={TwitchClientId}&redirect_uri=http://localhost&scope=channel_check_subscription+channel_commercial+channel_editor+channel_read+channel_subscriptions+chat_login+user_blocks_edit+user_blocks_read+user_read&force_verify=true";
 
         // The username to authenticate
