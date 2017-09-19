@@ -134,14 +134,21 @@
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
     <Compile Include="Model\Static\BinaryFile.cs" />
     <Compile Include="Model\Static\MethodExtensions.cs" />
-    <Compile Include="Model\TwitchAPIv5\TwitchAPI.cs" />
-    <Compile Include="Model\TwitchAPIv5\TwitchApiRequests.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPI.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIExceptions.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIModels\Follows.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIModels\User.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIModels\TwitchApiReponseData.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIModels\TwitchApiResponse.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Requests.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Channel.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follower.cs" />
-    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Follows.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\v5Follows.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\GetUsers.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\TwitchStream.cs" />
-    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\User.cs" />
+    <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\v5User.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIRequests.cs" />
     <Compile Include="Model\TwitchPubSubService\ITwitchPubSubService.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubPayload.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
@@ -161,12 +168,12 @@
     <Compile Include="Model\Main\LimitedObservableCollection.cs" />
     <Compile Include="Model\ChatConnectionService\TwitchChatConnection\TwitchChatConnection.cs" />
     <Compile Include="Model\ChatConnectionService\TwitchChatConnection\TwitchChatConnectionEventArgs.cs" />
-    <Compile Include="Model\ChatConnectionService\TwitchChatConnection\TcpConnection\TcpDisconnectEnums.cs" />
+    <Compile Include="Model\ChatConnectionService\TwitchChatConnection\IrcTcpConnection\IrcTcpEnums.cs" />
     <Compile Include="Model\Main\MainSettings.cs" />
     <Compile Include="Model\ChatConnectionService\TwitchCredentials.cs" />
     <Compile Include="Model\ChatConnectionService\TwitchChatMessage.cs" />
-    <Compile Include="Model\ChatConnectionService\TwitchChatConnection\TcpConnection\TcpConnection.cs" />
-    <Compile Include="Model\ChatConnectionService\TwitchChatConnection\TcpConnection\TcpConnectionEventArgs.cs" />
+    <Compile Include="Model\ChatConnectionService\TwitchChatConnection\IrcTcpConnection\IrcTcpConnection.cs" />
+    <Compile Include="Model\ChatConnectionService\TwitchChatConnection\IrcTcpConnection\IrcTcpConnectionEventArgs.cs" />
     <Compile Include="View\BoolToNotBool.cs" />
     <Compile Include="Model\WebSocketEventService\IWebSocketEventService.cs" />
     <Compile Include="Model\WebSocketEventService\WebSocketEventClientRegister.cs" />
@@ -275,7 +282,7 @@ DEL "$(TargetDir)*.xml"
 DEL "$(TargetDir)System.Data.SQLite.dll.config"
 
 ; Move all assemblies and related files to lib folder
-ROBOCOPY "$(TargetDir) " "$(TargetDir)lib\ " /XF *.exe *.config *.manifest /XD lib logs data /E /IS /MOVE
+ROBOCOPY "$(TargetDir) " "$(TargetDir)lib\ " /XF *.exe *.config *.manifest *.pdb /XD lib logs data /E /IS /MOVE
 if %25errorlevel%25 leq 4 exit 0 else exit %25errorlevel%25</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -6,7 +6,7 @@ namespace OakBot.Model
     /// <summary>
     /// Class representing the `Follows` object returned from Twitch APIv5.
     /// </summary>
-    public class Follows
+    public class v5Follows
     {
         /// <summary>
         /// Timestamp of the follow.

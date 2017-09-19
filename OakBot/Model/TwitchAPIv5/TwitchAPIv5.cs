@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace OakBot.Model
 {
-    public static class TwitchAPI
+    public static class TwitchAPIv5
     {
         #region Fields
 
@@ -21,34 +20,39 @@ namespace OakBot.Model
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        // Authenticated Token
-        private static string AccessToken = string.Empty;
-
         #endregion
-
-        /// <summary>
-        /// Sets the obtained authenticated access token to use the Twitch API
-        /// </summary>
-        /// <param name="accessToken"></param>
-        public static void SetAccessToken(TwitchCredentials caster)
-        {
-            // set the access token, remove oauth: if present
-            AccessToken = caster.OAuth;
-        }
 
         #region Users [2/15 Endpoints]
         /* https://dev.twitch.tv/docs/v5/reference/users */
 
         /// <summary>
+        /// Gets a user object based on the OAuth token provided.
+        /// https://dev.twitch.tv/docs/v5/reference/users#get-user
+        /// </summary>
+        /// <returns>Authenticated <see cref="v5User"/> object.</returns>
+        public static async Task<v5User> GetUser(string oauth)
+        {
+            try
+            {
+                var blob = TwitchAPIv5Requests.GetRequest($"https://api.twitch.tv/kraken/user", oauth);
+                return JsonConvert.DeserializeObject<v5User>(await blob, jSettings);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+            
+        /// <summary>
         /// Gets the user objects for the specified Twitch login names.
         /// https://dev.twitch.tv/docs/v5/reference/users#get-users
         /// </summary>
         /// <param name="usernames"><see cref="IEnumerable{string}"/> of Twitch usernames to get.</param>
-        /// <returns><see cref="IEnumerable{User}"/> of <see cref="User"/> objects.</returns>
-        public static async Task<IEnumerable<User>> GetUsers(IEnumerable<string> usernames)
+        /// <returns><see cref="IEnumerable{User}"/> of <see cref="v5User"/> objects.</returns>
+        public static async Task<IEnumerable<v5User>> GetUsers(IEnumerable<string> usernames)
         {
             // Create an empty list to fill with results
-            List<User> TranslatedUsers = new List<User>();
+            List<v5User> TranslatedUsers = new List<v5User>();
 
             // If the IEnumerable has more than 100 names to lookup, split in batches
             if (usernames.Count() > 100)
@@ -72,7 +76,7 @@ namespace OakBot.Model
 
                 try
                 {
-                    var blob = TwitchApiRequests.GetRequest($"https://api.twitch.tv/kraken/users?login={concatUsernames}");
+                    var blob = TwitchAPIv5Requests.GetRequest($"https://api.twitch.tv/kraken/users?login={concatUsernames}");
                     TranslatedUsers.AddRange(JsonConvert.DeserializeObject<GetUsers>(await blob, jSettings).Users);
                 }
                 catch
@@ -91,12 +95,12 @@ namespace OakBot.Model
         /// https://dev.twitch.tv/docs/v5/reference/users#get-users
         /// </summary>
         /// <param name="name">Twitch username to get user object for.</param>
-        /// <returns><see cref="User"/> object on success, null otherwise.</returns>
-        public static async Task<User> GetUsers(string username)
+        /// <returns><see cref="v5User"/> object on success, null otherwise.</returns>
+        public static async Task<v5User> GetUsers(string username)
         {
             try
             {
-                var blob = await TwitchApiRequests.GetRequest($"https://api.twitch.tv/kraken/users?login={username}");
+                var blob = await TwitchAPIv5Requests.GetRequest($"https://api.twitch.tv/kraken/users?login={username}");
                 return JsonConvert.DeserializeObject<GetUsers>(blob, jSettings).Users[0];
             }
             catch (WebException)
@@ -115,18 +119,18 @@ namespace OakBot.Model
         /// </summary>
         /// <param name="userId">The id of the user to check.</param>
         /// <param name="channelId">The id of the channel to check.</param>
-        /// <returns>If the user is following the channel, a <see cref="Follows"/> object is returned, else <see cref="null"/>.</returns>
+        /// <returns>If the user is following the channel, a <see cref="v5Follows"/> object is returned, else <see cref="null"/>.</returns>
         /// <exception cref="WebException">On anything other than a 404.</exception>
-        public static async Task<Follows> CheckUserFollowsByChannel(string userId, string channelId)
+        public static async Task<v5Follows> CheckUserFollowsByChannel(string userId, string channelId)
         {
             try
             {
                 // Make the request
-                var blob = await TwitchApiRequests.GetRequest($"https://api.twitch.tv/kraken/users/{userId}/follows/channels/{channelId}");
+                var blob = await TwitchAPIv5Requests.GetRequest($"https://api.twitch.tv/kraken/users/{userId}/follows/channels/{channelId}");
 
                 // If the response returned successful then the
                 // specified user is following the specified channel
-                return JsonConvert.DeserializeObject<Follows>(blob, jSettings);
+                return JsonConvert.DeserializeObject<v5Follows>(blob, jSettings);
             }
             catch (WebException ex)
             {
@@ -140,7 +144,7 @@ namespace OakBot.Model
             }
         }
 
-        #endregion
+#endregion
 
         #region Streams [1/5 Endpoints]
         /* https://dev.twitch.tv/docs/v5/reference/streams */
@@ -157,13 +161,13 @@ namespace OakBot.Model
             try
             {
                 // Make the request to get user id from username
-                User user = await GetUsers(channelName);
+                v5User user = await GetUsers(channelName);
                 if (user == null)
                     return null;
                 await Task.Delay(500);
                 
                 // Make the request
-                var blob = await TwitchApiRequests.GetRequest($"https://api.twitch.tv/kraken/streams/{user.Id}");
+                var blob = await TwitchAPIv5Requests.GetRequest($"https://api.twitch.tv/kraken/streams/{user.Id}");
 
                 // Deserialize into a JObject, not using reflection here yet.
                 JToken blobObj = JObject.Parse(blob);
@@ -185,7 +189,6 @@ namespace OakBot.Model
                 return null;
             }
         }
-
 
         #endregion
     }

@@ -74,7 +74,7 @@ namespace OakBot.Model
             }
         }
 
-        public async void Connect(bool isCaster)
+        public void Connect(bool isCaster)
         {
             if (string.IsNullOrWhiteSpace(_channel))
             {
@@ -85,11 +85,11 @@ namespace OakBot.Model
             {
                 if (!isCaster && _botaccount != null)
                 {
-                    await _tcc1.Connect(_secure, _botaccount);
+                    _tcc1.Connect(_secure, _botaccount);
                 }
                 else if (isCaster && _casteraccount != null)
                 {
-                    await _tcc2.Connect(_secure, _casteraccount);
+                    _tcc2.Connect(_secure, _casteraccount);
                 }
             }
             catch { }
