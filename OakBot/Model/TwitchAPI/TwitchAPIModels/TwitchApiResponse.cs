@@ -24,4 +24,9 @@ namespace OakBot.Model
         [JsonProperty("cursor")]
         internal string Cursor { get; private set; }
     }
+
+    /// <summary>
+    /// Abstract class to indicate a model is a Twitch API data response model.
+    /// </summary>
+    internal abstract class TwitchApiResponseData { }
 }

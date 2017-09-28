@@ -46,6 +46,9 @@ namespace OakBot.ViewModel
                 SimpleIoc.Default.Register<ITwitchPubSubService, TwitchPubSubService>();
             }
 
+            // Register ViewModels and create instance immedialy
+            SimpleIoc.Default.Register<StatusBarViewModel>(true);
+
             // Register ViewModels instanciated on use by a View
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<GiveawaysViewModel>();
@@ -59,6 +62,14 @@ namespace OakBot.ViewModel
             }
         }
 
+        public StatusBarViewModel StatusBar
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<StatusBarViewModel>();
+            }
+        }
+
         public GiveawaysViewModel Giveaways
         {
             get
@@ -66,7 +77,7 @@ namespace OakBot.ViewModel
                 return ServiceLocator.Current.GetInstance<GiveawaysViewModel>();
             }
         }
-        
+
         public static void Cleanup()
         {
             // TODO Clear the ViewModels

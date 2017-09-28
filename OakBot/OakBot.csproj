@@ -139,7 +139,6 @@
     <Compile Include="Model\TwitchAPI\TwitchAPIExceptions.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIModels\Follows.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIModels\User.cs" />
-    <Compile Include="Model\TwitchAPI\TwitchAPIModels\TwitchApiReponseData.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIModels\TwitchApiResponse.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Requests.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5Models\Channel.cs" />
@@ -154,6 +153,7 @@
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
     <Compile Include="ViewModel\GiveawaysViewModel.cs" />
     <Compile Include="ViewModel\GiveawayViewModel.cs" />
+    <Compile Include="ViewModel\StatusBarViewModel.cs" />
     <Compile Include="View\DataGridBehavior.cs" />
     <Compile Include="Model\ChatConnectionService\ChatConnectionService.cs" />
     <Compile Include="Model\ChatConnectionService\ChatConnectionServiceEventArgs.cs" />

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -58,8 +59,6 @@ namespace OakBot.ViewModel
             _ccs.Authenticated += _ccs_Authenticated;
             _ccs.Disconnected += _ccs_Disconnected;
 
-            _wse.SetApiToken("oakbotapitest");
-
             // Load settings
             var loaded = BinaryFile.ReadEncryptedBinFile("LoginSettings");
             if (loaded != null && loaded is MainSettings)
@@ -97,7 +96,9 @@ namespace OakBot.ViewModel
                 // Failure, load defaults
                 _mainSettings = new MainSettings();
             }
-            
+
+            _wse.StartService(1337, "oakbotapitest");
+
         }
 
         #endregion
@@ -194,7 +195,7 @@ namespace OakBot.ViewModel
                 return Regex.IsMatch(BotUsername ?? string.Empty, @"^[a-z0-9][a-z0-9_]{3,24}$");
             }
         }
-        
+
         #endregion
 
         #region Event Handlers
@@ -679,7 +680,8 @@ namespace OakBot.ViewModel
                         }));
             }
         }
-        
+
         #endregion
+
     }
 }

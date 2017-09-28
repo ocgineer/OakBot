@@ -24,7 +24,7 @@
         </Canvas>
     </Window.Resources>
     <Grid>
-        <TabControl x:Name="tabControl">
+        <TabControl x:Name="tabControl" Margin="0,0,0,25">
             <TabItem Header="Config">
                 <Grid Background="#FFE5E5E5" DataContext="{Binding Main}">
                     <GroupBox Header="Bot Login" Height="93" Margin="10,10,240,0" VerticalAlignment="Top" IsEnabled="{Binding IsBotConnected, Converter={StaticResource InverseBool}, UpdateSourceTrigger=PropertyChanged}">
@@ -131,9 +131,9 @@
                     <ComboBox Margin="10,0,0,10" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="95" ItemsSource="{Binding ChatAccounts}" SelectedItem="{Binding SelectedAccount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsBotConnected, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </TabItem>
-            <TabItem Header="Giveaways" IsEnabled="{Binding Main.IsBotConnected, UpdateSourceTrigger=PropertyChanged}">
+            <TabItem Header="Giveaways">
                 <Grid Background="#FFE5E5E5" DataContext="{Binding Giveaways}">
-                    <TabControl ItemsSource="{Binding GiveawayModules}">
+                    <TabControl ItemsSource="{Binding GiveawayModules}" IsEnabled="{Binding IsChatConnected, UpdateSourceTrigger=PropertyChanged}">
                         <TabControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding ID, StringFormat=Giveaway {0}}"/>
@@ -253,5 +253,32 @@
                 </Grid>
             </TabItem>
         </TabControl>
+        <StatusBar Height="25" VerticalAlignment="Bottom" DataContext="{Binding StatusBar}">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="25" />
+                            <ColumnDefinition Width="25" />
+                            <ColumnDefinition Width="25" />
+                            <ColumnDefinition Width="25" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem Grid.Column="1" ToolTip="Websocket Event Service Status.">
+                <Rectangle Width="20" Height="20" Fill="{Binding WsEventServiceStatus}"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="2" ToolTip="Twitch PubSub Connection Status.">
+                <Rectangle Width="20" Height="20" Fill="DarkRed"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="3" ToolTip="Caster IRC Connection Status.">
+                <Rectangle Width="20" Height="20" Fill="{Binding CasterChatConnectionStatus}"/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="4" ToolTip="Bot IRC Connection Status.">
+                <Rectangle Width="20" Height="20" Fill="{Binding BotChatConnectionStatus}"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
