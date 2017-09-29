@@ -11,6 +11,7 @@ namespace OakBot.ViewModel
 
         private SolidColorBrush _botChatConnectionStatus;
         private SolidColorBrush _casterChatConnectionStatus;
+        private SolidColorBrush _pubsubConnectionStatus;
         private SolidColorBrush _wsEventServiceStatus;
 
         #endregion
@@ -22,11 +23,13 @@ namespace OakBot.ViewModel
             // Subscribe to system messages
             Messenger.Default.Register<bool>(this, "SystemChatConnectionChanged", (status) => SystemChatConnectionChanged(status));
             Messenger.Default.Register<bool>(this, "CasterChatConnectionChanged", (status) => CasterChatConnectionChanged(status));
+            Messenger.Default.Register<bool>(this, "PubSubConnectionChanged", (status) => PubSubConnectionChanged(status));
             Messenger.Default.Register<bool>(this, "WebSocketEventServiceStatusChanged", (status) => WebSocketEventServiceStatusChanged(status));
 
             // Initialize brushes
             _botChatConnectionStatus = Brushes.DarkRed;
             _casterChatConnectionStatus = Brushes.DarkRed;
+            _pubsubConnectionStatus = Brushes.DarkRed;
             _wsEventServiceStatus = Brushes.DarkRed;
         }
 
@@ -55,6 +58,18 @@ namespace OakBot.ViewModel
             else
             {
                 CasterChatConnectionStatus = Brushes.DarkRed;
+            }
+        }
+
+        private void PubSubConnectionChanged(bool status)
+        {
+            if (status)
+            {
+                PubSubConnectionStatus = Brushes.DarkGreen;
+            }
+            else
+            {
+                PubSubConnectionStatus = Brushes.DarkRed;
             }
         }
 
@@ -101,6 +116,22 @@ namespace OakBot.ViewModel
                 if (value != _casterChatConnectionStatus)
                 {
                     _casterChatConnectionStatus = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public SolidColorBrush PubSubConnectionStatus
+        {
+            get
+            {
+                return _pubsubConnectionStatus;
+            }
+            set
+            {
+                if (value != _pubsubConnectionStatus)
+                {
+                    _pubsubConnectionStatus = value;
                     RaisePropertyChanged();
                 }
             }

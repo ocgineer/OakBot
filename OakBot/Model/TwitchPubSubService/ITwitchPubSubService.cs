@@ -1,8 +1,11 @@
-﻿namespace OakBot.Model
+﻿using System.Threading.Tasks;
+
+namespace OakBot.Model
 {
     public interface ITwitchPubSubService
     {
-        void Connect(TwitchCredentials credentials);
+        Task<bool> Connect(TwitchCredentials credentials);
         void Close();
+        Task Reconnect();
     }
 }

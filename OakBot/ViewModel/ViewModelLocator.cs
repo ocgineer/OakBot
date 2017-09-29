@@ -51,6 +51,7 @@ namespace OakBot.ViewModel
 
             // Register ViewModels instanciated on use by a View
             SimpleIoc.Default.Register<MainViewModel>();
+            SimpleIoc.Default.Register<ConsoleViewModel>();
             SimpleIoc.Default.Register<GiveawaysViewModel>();
         }
 
@@ -67,6 +68,14 @@ namespace OakBot.ViewModel
             get
             {
                 return ServiceLocator.Current.GetInstance<StatusBarViewModel>();
+            }
+        }
+
+        public ConsoleViewModel Console
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<ConsoleViewModel>();
             }
         }
 
