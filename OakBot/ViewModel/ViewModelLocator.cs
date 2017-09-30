@@ -54,7 +54,7 @@ namespace OakBot.ViewModel
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<ConsoleViewModel>();
             SimpleIoc.Default.Register<GiveawaysViewModel>();
-            SimpleIoc.Default.Register<GiveawaysViewModel>();            
+                        
 
             // Register ViewModels create instance Immediately as no view is using them yet
             SimpleIoc.Default.Register<SubWelcomeModel>(true);

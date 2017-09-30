@@ -18,7 +18,7 @@ namespace OakBot.ViewModel
         /// </summary>
 
         private static string dbFile = "C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db";
-        private static string trainFile = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\HighestTrain.txt";
+        private static string trainFile = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\";
 
         private IChatConnectionService _chat;        
 
@@ -58,11 +58,12 @@ namespace OakBot.ViewModel
             //Build String for Database
             BuildConnectionString(dbFile);
 
-            // Check if Train File Exists other wise creates it
-            if (!File.Exists(trainFile))
+            if (!Directory.Exists(trainFile))
             {
-                File.WriteAllText(trainFile, _trainHigh.ToString());
-            }
+                Directory.CreateDirectory(trainFile);
+                File.WriteAllText(trainFile + "HighestTrain.txt", _trainHigh.ToString());
+            }           
+               
             
             // Load in Saved Highest Sub Train
             var tr = new StreamReader(trainFile);

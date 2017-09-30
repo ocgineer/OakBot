@@ -156,6 +156,8 @@
     <Compile Include="Model\TwitchPubSubService\ITwitchPubSubService.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubPayload.cs" />
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
+    <Compile Include="ViewModel\ConsoleViewModel.cs" />
+    <Compile Include="ViewModel\GiveawayViewModel.cs" />
     <Compile Include="ViewModel\SubDB.cs" />
     <Compile Include="ViewModel\SubTrain.cs" />
     <Compile Include="ViewModel\SubWelcomeModel.cs" />
@@ -163,7 +165,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ViewModel\GiveawaysViewModel.cs" />
-    <Compile Include="ViewModel\GiveawayViewModel.cs" />
     <Compile Include="ViewModel\StatusBarViewModel.cs" />
     <Compile Include="View\DataGridBehavior.cs" />
     <Compile Include="Model\ChatConnectionService\ChatConnectionService.cs" />
