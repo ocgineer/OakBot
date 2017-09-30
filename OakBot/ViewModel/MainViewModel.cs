@@ -11,7 +11,6 @@ using System.Text.RegularExpressions;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.CommandWpf;
-using GalaSoft.MvvmLight.Threading;
 
 using OakBot.Model;
 
@@ -25,6 +24,7 @@ namespace OakBot.ViewModel
         private readonly IChatConnectionService _ccs;
         private readonly IWebSocketEventService _wse;
         private readonly ITwitchPubSubService _pss;
+        private readonly IChatterDatabaseService _cds;
 
         private MainSettings _mainSettings;
 
@@ -39,7 +39,7 @@ namespace OakBot.ViewModel
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
         public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse,
-            ITwitchPubSubService pss)
+            ITwitchPubSubService pss, IChatterDatabaseService cds)
         {          
             Title = "OakBot - YATB";
 
@@ -47,18 +47,11 @@ namespace OakBot.ViewModel
             _ccs = ccs;
             _wse = wse;
             _pss = pss;
-
-            // Initialize collections
-            _chatAccounts = new ObservableCollection<ITwitchAccount>();
-            _chatmessages = new LimitedObservableCollection<TwitchChatMessage>(500);
+            _cds = cds;
 
             // Register for chat connection service events
-            _ccs.ChatMessageReceived += _ccs_MessageReceived;
-            _ccs.Connected += _ccs_Connected;
             _ccs.Authenticated += _ccs_Authenticated;
             _ccs.Disconnected += _ccs_Disconnected;
-
-            _wse.SetApiToken("oakbotapitest");
 
             // Load settings
             var loaded = BinaryFile.ReadEncryptedBinFile("LoginSettings");
@@ -97,7 +90,10 @@ namespace OakBot.ViewModel
                 // Failure, load defaults
                 _mainSettings = new MainSettings();
             }
-            
+
+            // Start WebSocket Event Service
+            _wse.StartService(1337, "oakbotapitest");
+
         }
 
         #endregion
@@ -108,15 +104,6 @@ namespace OakBot.ViewModel
         {
             BinaryFile.WriteEncryptedBinFile("LoginSettings", _mainSettings);
             _ccs.SetJoiningChannel(_mainSettings.Channel, _isUsingSSL);
-        }
-
-        private void AddChatMessage(TwitchChatMessage tcm)
-        {
-            // Add message on via the main thread
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                _chatmessages.AddAndTrim(tcm);
-            });
         }
 
         private void ConnectDisconnectChat(bool isCaster)
@@ -149,7 +136,11 @@ namespace OakBot.ViewModel
                         ConnectDisconnectChat(true);
                     }
 
+                    // Disconnect chat service
                     _ccs.Disconnect(false);
+
+                    // stop database service
+                    _cds.StopService();
                 }
                 else
                 {
@@ -162,8 +153,11 @@ namespace OakBot.ViewModel
                         // Set credentials
                         _ccs.SetCredentials(_botCredentials);
 
-                        // Connect
+                        // Connect chat service
                         _ccs.Connect(false);
+
+                        // Start database service
+                        _cds.StartService(ChannelName);
                     }
                 }
             }
@@ -194,27 +188,10 @@ namespace OakBot.ViewModel
                 return Regex.IsMatch(BotUsername ?? string.Empty, @"^[a-z0-9][a-z0-9_]{3,24}$");
             }
         }
-        
+
         #endregion
 
         #region Event Handlers
-
-        private void _ccs_MessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
-        {
-            // Add received message to collection
-            AddChatMessage(e.ChatMessage);
-
-            // Broadcast received message for other VM
-            Messenger.Default.Send<TwitchChatMessage>(e.ChatMessage, "chatmessage");
-        }
-
-        private void _ccs_Connected(object sender, ChatConnectionConnectedEventArgs e)
-        {
-            AddChatMessage(new TwitchChatMessage(
-                    string.Format("{0} is successfully connected to chat server. Authenticating now.", e.Account.Username),
-                    "OakBot")
-            );
-        }
 
         private void _ccs_Authenticated(object sender, ChatConnectionAuthenticatedEventArgs e)
         {
@@ -230,33 +207,6 @@ namespace OakBot.ViewModel
                     IsBotConnected = true;
                     _wse.BroadcastEvent("OAKBOT_CHAT_CONNECTED", new { name = e.Account.Username });
                 }
-
-                // Add account to collection
-                DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                {
-                    // Add
-                    _chatAccounts.Add(e.Account);
-
-                    // If only account, pre-select it
-                    if (_chatAccounts.Count == 1)
-                    {
-                        SelectedAccount = e.Account;
-                    }
-                });
-
-                // Add success message in console
-                AddChatMessage(new TwitchChatMessage(
-                    string.Format("{0} successfully authenticated, have fun!", e.Account.Username),
-                    "Oakbot")
-                );
-            }
-            else
-            {
-                // Add failure message in console
-                AddChatMessage(new TwitchChatMessage(
-                    string.Format("{0} failed to authenticate, please relink with Twitch!", e.Account.Username),
-                    "Oakbot")
-                );
             }
         }
 
@@ -272,24 +222,6 @@ namespace OakBot.ViewModel
                 IsBotConnected = false;
                 _wse.BroadcastEvent("OAKBOT_CHAT_DISCONNECTED", new { name = e.Account.Username });
             }
-
-            // Remove account from chat accounts collection
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                // Remove
-                _chatAccounts.Remove(e.Account);
-
-                // Selected account got disconnected
-                if (SelectedAccount == null && _chatAccounts.Count != 0)
-                {
-                    SelectedAccount = _chatAccounts[0];
-                }
-            });
-
-            // Add disconnection message to console
-            AddChatMessage(new TwitchChatMessage(
-                string.Format("{0} disconnected from the chat.", e.Account.Username),
-                "OakBot"));
         }
 
         #endregion
@@ -568,94 +500,6 @@ namespace OakBot.ViewModel
 
         #endregion
 
-        #region Console Properties
-
-        /// <summary>
-        /// The <see cref="TwitchChatMessage"/> collection for bindings.
-        /// </summary>
-        private LimitedObservableCollection<TwitchChatMessage> _chatmessages;
-        public LimitedObservableCollection<TwitchChatMessage> ChatMessages
-        {
-            get
-            {
-                return _chatmessages;
-            }
-        }
-
-        /// <summary>
-        /// The connected <see cref="ITwitchAccount"/> chat accounts collection for bindings.
-        /// </summary>
-        private ObservableCollection<ITwitchAccount> _chatAccounts;
-        public ObservableCollection<ITwitchAccount> ChatAccounts
-        {
-            get
-            {
-                return _chatAccounts;
-            }
-        }
-
-        /// <summary>
-        /// The selected account to send chat message as for bindings.
-        /// </summary>
-        private ITwitchAccount _selectedAccount;
-        public ITwitchAccount SelectedAccount
-        {
-            get
-            {
-                return _selectedAccount;
-            }
-            set
-            {
-                if (value != _selectedAccount)
-                {
-                    _selectedAccount = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Message to send to chat for bindings.
-        /// </summary>
-        private string _messageToSend;
-        public string MessageToSend
-        {
-            get
-            {
-                return _messageToSend;
-            }
-            private set
-            {
-                // dont compare for change, as its private set, ui cant change
-                _messageToSend = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// UI Command binding to send given message to with selected account.
-        /// </summary>
-        private ICommand _cmdSendMessage;
-        public ICommand CmdSendMessage
-        {
-            get
-            {
-                return _cmdSendMessage ??
-                    (_cmdSendMessage = new RelayCommand<string>(
-                        (msg) =>
-                        {
-                            _ccs.SendMessage(msg, SelectedAccount.IsCaster);
-                            MessageToSend = "";
-                        },
-                        (msg) =>
-                        {
-                            // Can execute when not null or whitespace
-                            return !string.IsNullOrWhiteSpace(msg) && SelectedAccount != null;
-                        }
-                    ));
-            }
-        }
-
         private ICommand _cmdTestButton1;
         public ICommand CmdTestButton1
         {
@@ -663,23 +507,11 @@ namespace OakBot.ViewModel
             {
                 return _cmdTestButton1 ??
                     (_cmdTestButton1 = new RelayCommand(
-                        async () =>
+                        () =>
                         {
-
-                            /* init list at startup */
-                            var a = await TwitchAPI.GetUserLatestFollowings("50553721");
-                            var b = await TwitchAPI.GetUserLatestFollowers("50553721");
-
-
-
-
-
-
 
                         }));
             }
         }
-        
-        #endregion
     }
 }

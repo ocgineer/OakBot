@@ -51,8 +51,7 @@ namespace OakBot.View
 
         private static void Unsubscribe(DataGrid dataGrid)
         {
-            NotifyCollectionChangedEventHandler handler;
-            handlersDict.TryGetValue(dataGrid, out handler);
+            handlersDict.TryGetValue(dataGrid, out NotifyCollectionChangedEventHandler handler);
             if (handler == null)
             {
                 return;

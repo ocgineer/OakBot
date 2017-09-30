@@ -2,6 +2,7 @@
 using System.Timers;
 using System.Threading.Tasks;
 
+using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
 using WebSocketSharp;
 
@@ -22,7 +23,7 @@ namespace OakBot.Model
         private int _reconnectionAttempt;
 
         private TwitchCredentials _casterCredentials;
-        private string _channelId;
+        private string _userId;
 
         #endregion
 
@@ -39,10 +40,6 @@ namespace OakBot.Model
 
         public TwitchPubSubService()
         {
-            // Register to the shutdown notification to properlly close connection
-            GalaSoft.MvvmLight.Messaging.Messenger.Default.Register<GalaSoft.MvvmLight.Messaging.NotificationMessage>
-                (this, "shutdown", (msg) => { Close(); });
-
             // Initialize WebSocket client connection
             _wsclient = new WebSocket("wss://pubsub-edge.twitch.tv");
             _wsclient.OnOpen += _wsclient_OnOpen;
@@ -70,38 +67,36 @@ namespace OakBot.Model
         /// <summary>
         /// Attemt connection to PubSub server, after fetching channelIDs from Twitch API.
         /// </summary>
-        /// <param name="caster">Caster credentials, to requests private PubSub events.</param>
-        public async void Connect(TwitchCredentials caster)
+        /// <param name="credentials">Caster credentials, to requests private PubSub events.</param>
+        public async Task<bool> Connect(TwitchCredentials credentials)
         {
-            // Set caster credentials if given
-            _casterCredentials = caster ?? _casterCredentials;
-
-            // Get caster user-id to connect subscribe pubsub
-            /* TODO: What to do when user fetch fails?! */
-            if (_channelId == null)
+            if (credentials.IsCaster)
             {
-                v5User authUser = await TwitchAPIv5.GetUser(caster.OAuth);
-                if (authUser != null)
+                // Set caster credentials
+                _casterCredentials = credentials;
+
+                try
                 {
-                    _channelId = authUser.Id;
-                    this.Connect();
+                    v5User authUser = await TwitchAPIv5.GetUser(credentials.OAuth);
+                    if (authUser != null)
+                    {
+                        _userId = authUser.Id;
+                        _wsclient.ConnectAsync();
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
-                else
+                catch
                 {
-                    
+                    return false;
                 }
             }
-
-            
-
-        }
-
-        private void Connect()
-        {
-            _wsclient.Connect();
-            if (!_wsclient.IsAlive)
+            else
             {
-                Reconnect();
+                return false;
             }
         }
 
@@ -112,18 +107,20 @@ namespace OakBot.Model
         {
             _pinger.Stop();
             _pongtimer.Stop();
-            _wsclient.Close(CloseStatusCode.Away);
+            _wsclient.CloseAsync(CloseStatusCode.Away);
         }
 
-        private async void Reconnect()
+        /// <summary>
+        /// Reconnects to PubSub with prior given credentials.
+        /// Closes PubSub connection first if still active.
+        /// </summary>
+        public async Task Reconnect()
         {
-            Console.WriteLine("PUBSUB RECONNECTION");
-            
             // Close websocket
-            this.Close();
+            Close();
 
             // Exponential reconnection backoff delay
-            if (++_reconnectionAttempt > 10)
+            if (_reconnectionAttempt++ > 10)
             {
                 await Task.Delay(TimeSpan.FromSeconds(120));
             }
@@ -133,7 +130,7 @@ namespace OakBot.Model
             }
 
             // Attempt new websocket connection
-            this.Connect();
+            _wsclient.ConnectAsync();
         }
 
         #endregion
@@ -165,9 +162,9 @@ namespace OakBot.Model
         /// <summary>
         /// Pong timer. If no PONG received after sending PING, silently reconnect.
         /// </summary>
-        private void _pongtimer_Elapsed(object sender, ElapsedEventArgs e)
+        private async void _pongtimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            this.Reconnect();
+            await Reconnect();
         }
 
         /// <summary>
@@ -178,9 +175,11 @@ namespace OakBot.Model
             // Start pinger
             _pinger.Start();
 
-            // Fire connected event
-            Connected?.Invoke(this, null);
+            // Reset reconnect attempts
             _reconnectionAttempt = 0;
+
+            // Fire connected event and broadcast message
+            Connected?.Invoke(this, null);
             
             // Create PubSub subscription payload
             var payload = new TwitchPubSubPayload
@@ -190,10 +189,10 @@ namespace OakBot.Model
                 Data = new TwitchPubSubPayloadData
                 {
                     Topics = new string[] {
-                        $"channel-subscribe-events-v1.{_channelId}",
-                        $"channel-bits-events-v1.{_channelId}",
-                        $"channel-commerce-events-v1.{_channelId}",
-                        $"whispers.{_channelId}"
+                        $"channel-subscribe-events-v1.{_userId}",
+                        $"channel-bits-events-v1.{_userId}",
+                        $"channel-commerce-events-v1.{_userId}",
+                        $"whispers.{_userId}"
                     },
                     AuthToken = _casterCredentials.OAuth
                 }
@@ -201,8 +200,6 @@ namespace OakBot.Model
 
             // Async send json converted payload to server
             _wsclient.SendAsync(JsonConvert.SerializeObject(payload), null);
-
-            Console.WriteLine("PubSub: OnOpen");
         }
 
         /// <summary>
@@ -214,8 +211,9 @@ namespace OakBot.Model
             _pinger.Stop();
             _pongtimer.Stop();
 
-            // Fire Disconnected event
+            // Fire Disconnected event and broadcast message
             Disconnected?.Invoke(this, null);
+            Messenger.Default.Send<bool>(false, "PubSubConnectionChanged");
         }
 
         /// <summary>
@@ -228,7 +226,7 @@ namespace OakBot.Model
             #endif
         }
 
-        private void _wsclient_OnMessage(object sender, MessageEventArgs e)
+        private async void _wsclient_OnMessage(object sender, MessageEventArgs e)
         {
             // Ignore if its not text
             if (!e.IsText)
@@ -263,7 +261,7 @@ namespace OakBot.Model
             else if (received.Type == "RECONNECT")
             {
                 // Silently reconnect
-                this.Reconnect();
+                await Reconnect();
             }
 
             // RESONSE received
@@ -293,7 +291,7 @@ namespace OakBot.Model
 
                     // All OK
                     default:
-                        Console.WriteLine("PubSub: AllOK");
+                        Messenger.Default.Send<bool>(true, "PubSubConnectionChanged");
                         Subscribed?.Invoke(this, null);
                         break;
                 }
@@ -302,6 +300,7 @@ namespace OakBot.Model
             // PubSub message on event registered for
             else if (received.Type == "MESSAGE")
             {
+                Message?.Invoke(this, new EventArgs());
                 Console.WriteLine("PUBSUB MESSAGE: " + received.Data.Message);
             }   
         }

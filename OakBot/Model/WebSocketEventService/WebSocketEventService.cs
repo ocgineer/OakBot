@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 
+using GalaSoft.MvvmLight.Messaging;
 using WebSocketSharp.Server;
 using Newtonsoft.Json;
 
@@ -20,24 +21,12 @@ namespace OakBot.Model
 
         /// <summary>
         /// Initialize and start the websocket server.
-        /// Does not set the main service <see cref="SetApiToken(string)"/> does this.
+        /// Does not set the main service <see cref="ChangeApiToken(string)"/> does this.
         /// </summary>
         public WebSocketEventService()
         {
             // Initialize
             _register = new WebSocketEventClientRegister();
-            _server = new WebSocketServer(System.Net.IPAddress.Any, 1337);
-
-            // Start ws server without service the service
-            try
-            {
-                _server.Start();
-            }
-            catch
-            {
-                // Another websocket is already using 1337
-            }
-            
         }
 
         #endregion
@@ -45,11 +34,55 @@ namespace OakBot.Model
         #region Interface Methods
 
         /// <summary>
-        /// Sets the API key and add the main service.
-        /// If main service is already running it removes the service first.
+        /// Start the websocket server with given api token for the main service.
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="token"></param>
+        public bool StartService(int port, string token)
+        {
+            if (_server == null)
+            {
+                _token = token;
+                _server = new WebSocketServer(System.Net.IPAddress.Any, port);
+                _server.AddWebSocketService("/", () => new WebSocketMainService(token, _register));
+
+                // Try to start WebSocket server without any service attached
+                try
+                {
+                    // Start WebSocket server
+                    _server.Start();
+
+                    // Broadcast System Message on success
+                    Messenger.Default.Send<bool>(true, "WebSocketEventServiceStatusChanged");
+
+                    // Return successful
+                    return true;
+                }
+                catch
+                {
+                    // Dispose
+                    _server = null;
+                    
+                    // Broadcast System Message on failure
+                    Messenger.Default.Send<bool>(false, "WebSocketEventServiceStatusChanged");
+
+                    // Return failure
+                    return false;
+                }
+            }
+            else
+            {
+                // Server already running, return successful
+                return true;
+            } 
+        }
+        
+        /// <summary>
+        /// Changes the API key required to connect to the websocket main service.
+        /// If the main service is already running, will stop and disconnect all clients first.
         /// </summary>
         /// <param name="token">Token to be used to authenticate as client.</param>
-        public void SetApiToken(string token)
+        public void ChangeApiToken(string token)
         {
             // Remove main service if running
             if (_server.RemoveWebSocketService("/"))

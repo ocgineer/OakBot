@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using GalaSoft.MvvmLight.Messaging;
+
 namespace OakBot.Model
 {
     public class ChatConnectionService : IChatConnectionService
@@ -165,21 +167,29 @@ namespace OakBot.Model
 
         private void _tcc_Authentication(object sender, TwitchChatAuthenticationEventArgs e)
         {
+            // Fire authentication event
+            OnAuthentication(e.ClientCredentials, e.Successfull);
+
+            if (e.ClientCredentials.IsCaster)
+            {
+                // Broadcast ChatConnectionChanged message
+                Messenger.Default.Send<bool>(e.Successfull, "CasterChatConnectionChanged");
+            }
+            else
+            {
+                // Broadcast ChatConnectionChanged message
+                Messenger.Default.Send<bool>(e.Successfull, "SystemChatConnectionChanged");
+            }
+
             if (e.Successfull)
             {
-                // Fire authentication event
-                OnAuthentication(e.ClientCredentials, true);
-
-                // Join channel
+                // Join channel on success
                 var tcc = (TwitchChatConnection)sender;
                 tcc.JoinChannel(_channel);
             }
             else
             {
-                // Fire authentication event
-                OnAuthentication(e.ClientCredentials, false);
-
-                // Disconnect after failure
+                // Disconnect on failure
                 if (e.ClientCredentials.IsCaster)
                 {
                     _tcc2.Disconnect();
@@ -195,6 +205,17 @@ namespace OakBot.Model
         {
             // Fire disconnection event
             OnDisconnection(e.ClientCredentials, e.Reason);
+
+            if (e.ClientCredentials.IsCaster)
+            {
+                // Broadcast ChatConnectionChanged message
+                Messenger.Default.Send<bool>(false, "CasterChatConnectionChanged");
+            }
+            else
+            {
+                // Broadcast ChatConnectionChanged message
+                Messenger.Default.Send<bool>(false, "SystemChatConnectionChanged");
+            }
         }
 
         #endregion

@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 
 using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Messaging;
 
 using OakBot.Model;
 
@@ -20,14 +21,20 @@ namespace OakBot.ViewModel
 
         private readonly Random _rnd;
         private ObservableCollection<GiveawayViewModel> _modules;
+        private bool _isChatConnected;
 
         #endregion
 
-        public GiveawaysViewModel(IChatConnectionService chat, IWebSocketEventService wsevent)
+        #region Constructors
+
+        public GiveawaysViewModel(IChatConnectionService chatService, IWebSocketEventService wsEventService)
         {
             // Store references to services
-            _chatService = chat;
-            _wsEventService = wsevent;
+            _chatService = chatService;
+            _wsEventService = wsEventService;
+
+            // Subscribe to system messages
+            Messenger.Default.Register<bool>(this, "SystemChatConnectionChanged", (status) => SystemChatConnectionChanged(status));
 
             // Use one seeded pseudo-random generator for all giveaway modules
             _rnd = new Random();
@@ -41,6 +48,23 @@ namespace OakBot.ViewModel
             };
         }
 
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// System chat connection changed handler.
+        /// </summary>
+        /// <param name="status">Status of the system chat connection.</param>
+        private void SystemChatConnectionChanged(bool status)
+        {
+            IsChatConnected = status;
+        }
+
+        #endregion
+
+        #region Properties
+
         public ObservableCollection<GiveawayViewModel> GiveawayModules
         {
             get
@@ -48,5 +72,23 @@ namespace OakBot.ViewModel
                 return _modules;
             }
         }
+
+        public bool IsChatConnected
+        {
+            get
+            {
+                return _isChatConnected;
+            }
+            set
+            {
+                if (value != _isChatConnected)
+                {
+                    _isChatConnected = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        #endregion
     }
 }
