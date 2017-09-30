@@ -146,7 +146,7 @@ namespace OakBot.Model
                                 case "global_mod": UserType = UserType.GlobalMod; break;
                                 case "admin": UserType = UserType.Admin; break;
                                 case "staff": UserType = UserType.Staff; break;
-                                default: UserType = UserType.None; break;
+                                default: UserType = UserType.Normal; break;
                             }
                             break;
                 

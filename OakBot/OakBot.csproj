@@ -124,6 +124,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Model\ChatterDatabaseService\Chatter.cs" />
+    <Compile Include="Model\ChatterDatabaseService\ChatterDatabaseEventArgs.cs" />
+    <Compile Include="Model\ChatterDatabaseService\ChatterDatabaseService.cs" />
+    <Compile Include="Model\ChatterDatabaseService\IChatterDatabaseService.cs" />
     <Compile Include="Model\Giveaway\GiveawayEntry.cs" />
     <Compile Include="Model\Giveaway\GiveawayModuleSettings.cs" />
     <Compile Include="Model\Giveaway\GiveawayWebsocketEventData.cs" />
@@ -137,6 +141,7 @@
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPI.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIExceptions.cs" />
+    <Compile Include="Model\TwitchAPI\TwitchAPIModels\ChatterAPI.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIModels\Follows.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIModels\User.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIModels\TwitchApiResponse.cs" />

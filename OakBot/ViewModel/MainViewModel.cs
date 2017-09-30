@@ -24,6 +24,7 @@ namespace OakBot.ViewModel
         private readonly IChatConnectionService _ccs;
         private readonly IWebSocketEventService _wse;
         private readonly ITwitchPubSubService _pss;
+        private readonly IChatterDatabaseService _cds;
 
         private MainSettings _mainSettings;
 
@@ -38,7 +39,7 @@ namespace OakBot.ViewModel
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
         public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse,
-            ITwitchPubSubService pss)
+            ITwitchPubSubService pss, IChatterDatabaseService cds)
         {          
             Title = "OakBot - YATB";
 
@@ -46,6 +47,7 @@ namespace OakBot.ViewModel
             _ccs = ccs;
             _wse = wse;
             _pss = pss;
+            _cds = cds;
 
             // Register for chat connection service events
             _ccs.Authenticated += _ccs_Authenticated;
@@ -134,7 +136,11 @@ namespace OakBot.ViewModel
                         ConnectDisconnectChat(true);
                     }
 
+                    // Disconnect chat service
                     _ccs.Disconnect(false);
+
+                    // stop database service
+                    _cds.StopService();
                 }
                 else
                 {
@@ -147,8 +153,11 @@ namespace OakBot.ViewModel
                         // Set credentials
                         _ccs.SetCredentials(_botCredentials);
 
-                        // Connect
+                        // Connect chat service
                         _ccs.Connect(false);
+
+                        // Start database service
+                        _cds.StartService(ChannelName);
                     }
                 }
             }

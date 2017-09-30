@@ -42,6 +42,7 @@ namespace OakBot.ViewModel
             {
                 // Create run time view services and models
                 SimpleIoc.Default.Register<IChatConnectionService, ChatConnectionService>();
+                SimpleIoc.Default.Register<IChatterDatabaseService, ChatterDatabaseService>();
                 SimpleIoc.Default.Register<IWebSocketEventService, WebSocketEventService>();
                 SimpleIoc.Default.Register<ITwitchPubSubService, TwitchPubSubService>();
             }

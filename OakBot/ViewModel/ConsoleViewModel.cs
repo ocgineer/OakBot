@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 
 using GalaSoft.MvvmLight;
@@ -14,8 +15,13 @@ namespace OakBot.ViewModel
         #region Fields
 
         private readonly IChatConnectionService _chatService;
+        private readonly IChatterDatabaseService _databaseService;
+
         private readonly LimitedObservableCollection<TwitchChatMessage> _chatMessages;
         private readonly ObservableCollection<ITwitchAccount> _chatAccounts;
+
+        private ObservableCollection<ChatterAPI> _chatters;
+        private object _lockChatters;
 
         private bool _systemConnected;
         private string _messageToSend;
@@ -26,20 +32,27 @@ namespace OakBot.ViewModel
 
         #region Constructors
 
-        public ConsoleViewModel(IChatConnectionService chatService)
+        public ConsoleViewModel(IChatConnectionService chatService, IChatterDatabaseService databaseService)
         {
             // Dependancy Injection
             _chatService = chatService;
+            _databaseService = databaseService;
 
             // Initialize collections
             _chatMessages = new LimitedObservableCollection<TwitchChatMessage>(500);
+            _chatters = new ObservableCollection<ChatterAPI>();
             _chatAccounts = new ObservableCollection<ITwitchAccount>();
 
-            // Register for chatService Event
+            _lockChatters = new object();
+
+            // Register for chatService event
             _chatService.Connected += _chatService_Connected;
             _chatService.Authenticated += _chatService_Authenticated;
             _chatService.Disconnected += _chatService_Disconnected;
             _chatService.ChatMessageReceived += _chatService_ChatMessageReceived;
+
+            // Register for databaseService event
+            _databaseService.ChattersListUpdated += _databaseService_ChattersListUpdated;
         }
 
         #endregion
@@ -187,6 +200,24 @@ namespace OakBot.ViewModel
             });
         }
 
+        /// <summary>
+        /// Database Service Chatters List Update Event Handler.
+        /// </summary>
+        private void _databaseService_ChattersListUpdated(object sender, ChattersListUpdatedEventArgs e)
+        {
+            // renew chatters list received from service and
+            // trigger property changed for chatters count binding.
+            DispatcherHelper.CheckBeginInvokeOnUI(() =>
+            {
+                lock (_lockChatters)
+                {
+                    _chatters.Clear();
+                    _chatters.AddRange(e.Chatters);
+                    RaisePropertyChanged(() => this.ChattersCount);
+                }
+            });
+        }
+
         #endregion
 
         #region Properties
@@ -215,6 +246,35 @@ namespace OakBot.ViewModel
             get
             {
                 return _chatMessages;
+            }
+        }
+
+        /// <summary>
+        /// Connected chatters collection for bindings.
+        /// </summary>
+        public ObservableCollection<ChatterAPI> Chatters
+        {
+            get
+            {
+                return _chatters;
+            }
+        }
+
+        /// <summary>
+        /// Amount of connected chatters for bindings.
+        /// </summary>
+        public int ChattersCount
+        {
+            get
+            {
+                if (_chatters == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return _chatters.Count;
+                }
             }
         }
 

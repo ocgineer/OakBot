@@ -350,5 +350,65 @@ namespace OakBot.Model
         }
 
         #endregion
+
+        /// <summary>
+        /// [unsupported endpoint] Gets all current chatters connected to the specified Twitch IRC channel. 
+        /// </summary>
+        /// <param name="channelName">The name of the channel to fetch the chatters from.</param>
+        /// <returns>List of Tuples containing chatter username and chatter type.</returns>
+        public static async Task<List<ChatterAPI>> GetChannelChatters(string channelName)
+        {
+            // Initialize collection
+            List<ChatterAPI> chatters = new List<ChatterAPI>();
+
+            // Request
+            try
+            {
+                // Create the request
+                var blob = await TwitchAPIRequests.GetRequest($"http://tmi.twitch.tv/group/user/{channelName}/chatters");
+
+                // Parse response to json object
+                JObject parsed = JObject.Parse(blob);
+
+                // Iterate over chatter types (casted as JObject for KeyValuePair)
+                foreach (var chatterType in (JObject)parsed["chatters"])
+                {
+                    // Set user type (TwitchChatMessageEnums) from key name
+                    UserType type;
+                    switch (chatterType.Key)
+                    {
+                        case "moderators":
+                            type = UserType.Moderator;
+                            break;
+                        case "staff":
+                            type = UserType.Staff;
+                            break;
+                        case "admins":
+                            type = UserType.Admin;
+                            break;
+                        case "global_mods":
+                            type = UserType.GlobalMod;
+                            break;
+                        default:
+                            type = UserType.Normal;
+                            break;
+                    }
+
+                    // Iterate over chatters of said type (casted to JArray)
+                    foreach (string chatter in (JArray)chatterType.Value)
+                    {
+                        // Add the chatter struct to the collection
+                        chatters.Add(new ChatterAPI(chatter, type));
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                throw new TwitchAPIException(ex.Message, ((HttpWebResponse)ex.Response).StatusCode);
+            }
+
+            // Return the collection
+            return chatters;
+        }
     }
 }

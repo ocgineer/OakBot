@@ -83,11 +83,11 @@
     /// </summary>
     public enum UserType
     {
-        None,
+        Normal,
         Moderator,
         GlobalMod,
         Admin,
-        Staff,
+        Staff
     }
 
     public enum SubPlan
