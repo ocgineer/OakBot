@@ -42,7 +42,7 @@ namespace OakBot.ViewModel
             // Register to the shutdown notification
             Messenger.Default.Register<NotificationMessage>(this, "shutdown", (msg) => { _vm_OnShutdown(); });
 
-            // Set refferences to services
+            // Set references to services
             _chat = chat; // Twitch chat service
 
             // Register to events
@@ -58,7 +58,7 @@ namespace OakBot.ViewModel
             //Build String for Database
             BuildConnectionString(dbFile);
 
-            // Check if Train File Exists others Wises Creates it
+            // Check if Train File Exists other wise creates it
             if (!File.Exists(trainFile))
             {
                 File.WriteAllText(trainFile, _trainHigh.ToString());

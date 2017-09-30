@@ -242,7 +242,9 @@
   <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OakBot.Common\OakBot.Common.csproj">
       <Project>{a3cd149b-7e95-4cf3-92dc-d98fc9c1c761}</Project>
