@@ -29,6 +29,7 @@ namespace OakBot.Model
         public event EventHandler<ChatConnectionMessageReceivedEventArgs> RawMessageReceived;
         public event EventHandler<ChatConnectionConnectedEventArgs> Connected;
         public event EventHandler<ChatConnectionAuthenticatedEventArgs> Authenticated;
+        public event EventHandler<ChatConnectionChannelJoinedEventArgs> ChannelJoined;
         public event EventHandler<ChatConnectionDisconnectedEventArgs> Disconnected;
 
         #endregion
@@ -52,6 +53,8 @@ namespace OakBot.Model
             _tcc2.ChatMessageReceived += _tcc_ChatMessageReceived;
             _tcc1.RawMessageReceived += _tcc_RawMessageReceived;
             _tcc2.RawMessageReceived += _tcc_RawMessageReceived;
+
+            _tcc1.ChatterChanged += _tcc1_ChatterChanged;
         }
 
         #endregion
@@ -198,6 +201,14 @@ namespace OakBot.Model
                 {
                     _tcc1.Disconnect();
                 }
+            }
+        }
+
+        private void _tcc1_ChatterChanged(object sender, TwitchChatChatterChangedEventArgs e)
+        {
+            if (!e.HasParted && e.Username == e.ClientCredentials.Username)
+            {
+                ChannelJoined?.Invoke(this, new ChatConnectionChannelJoinedEventArgs(_botaccount, _channel));
             }
         }
 

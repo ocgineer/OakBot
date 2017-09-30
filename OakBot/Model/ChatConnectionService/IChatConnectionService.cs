@@ -12,6 +12,7 @@ namespace OakBot.Model
         event EventHandler<ChatConnectionMessageReceivedEventArgs> RawMessageReceived;
         event EventHandler<ChatConnectionConnectedEventArgs> Connected;
         event EventHandler<ChatConnectionAuthenticatedEventArgs> Authenticated;
+        event EventHandler<ChatConnectionChannelJoinedEventArgs> ChannelJoined;
         event EventHandler<ChatConnectionDisconnectedEventArgs> Disconnected;
 
         void Connect(bool isCaster);

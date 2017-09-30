@@ -16,6 +16,8 @@ namespace OakBot.Model
         private List<ChatterAPI> _chatters;
         private string _channel;
 
+        private object _lockChattersList;
+
         #endregion
 
         #region Events
@@ -29,13 +31,17 @@ namespace OakBot.Model
         public ChatterDatabaseService(IChatConnectionService chatService)
         {
             // This service depends on chat connection service to expand functionality.
+            // Also it lets this service opperate independently without any control needed.
             _chatService = chatService;
+            _chatService.ChannelJoined += _chatService_ChannelJoined;
+            _chatService.Disconnected += _chatService_Disconnected;
             _chatService.ChatMessageReceived += _chatService_ChatMessageReceived;
 
             // Initialize chatters list
             _chatters = new List<ChatterAPI>();
+            _lockChattersList = new object();
 
-            // Initialize timer to refresh chatters list
+            // Initialize timer to refresh chatters list from API
             _timerRefreshChatters = new System.Timers.Timer(60000);
             _timerRefreshChatters.Elapsed += _timerRefreshChatters_Elapsed;
         }
@@ -43,29 +49,6 @@ namespace OakBot.Model
         #endregion
 
         #region Public Methods
-
-        /// <summary>
-        /// Start the service.
-        /// Used after successful connection to the chat.
-        /// </summary>
-        /// <param name="channel"></param>
-        public void StartService(string channel)
-        {
-            _channel = channel;
-            _timerRefreshChatters.Start();
-            RefreshChattersList();
-        }
-
-        /// <summary>
-        /// Stop the service.
-        /// Used on disconnection of the chat.
-        /// </summary>
-        public void StopService()
-        {
-            _timerRefreshChatters.Stop();
-            _chatters.Clear();
-            ChattersListUpdated?.Invoke(this, new ChattersListUpdatedEventArgs(_chatters));
-        }
 
         #endregion
 
@@ -90,6 +73,39 @@ namespace OakBot.Model
         #endregion
 
         #region Event Handlers
+
+        /// <summary>
+        /// Chat Service Channel Joined Event Handler.
+        /// </summary>
+        private void _chatService_ChannelJoined(object sender, ChatConnectionChannelJoinedEventArgs e)
+        {
+            // If bot account joined a channel
+            if (!e.Account.IsCaster)
+            {
+                // Set channel and start service
+                _channel = e.Channel;
+                _timerRefreshChatters.Start();
+                RefreshChattersList();
+            }
+        }
+
+        /// <summary>
+        /// Chat Service Disconnected Event Handler.
+        /// </summary>
+        private void _chatService_Disconnected(object sender, ChatConnectionDisconnectedEventArgs e)
+        {
+            // If the bot account disconnected
+            if (!e.Account.IsCaster)
+            {
+                // Stop this service
+                _timerRefreshChatters.Stop();
+                lock (_lockChattersList)
+                {
+                    _chatters.Clear();
+                    ChattersListUpdated?.Invoke(this, new ChattersListUpdatedEventArgs(_chatters));
+                }
+            }
+        }
 
         /// <summary>
         /// Chat Service Message Received Event Handler.

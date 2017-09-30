@@ -2,17 +2,17 @@
 
 namespace OakBot.Model
 {
-    public class ChatConnectionBaseEventArgs : EventArgs
+    public class ChatConnectionEventArgs : EventArgs
     {
         public ITwitchAccount Account;
 
-        public ChatConnectionBaseEventArgs(ITwitchAccount account) : base()
+        public ChatConnectionEventArgs(ITwitchAccount account) : base()
         {
             Account = account;
         }
     }
 
-    public class ChatConnectionMessageReceivedEventArgs : ChatConnectionBaseEventArgs
+    public class ChatConnectionMessageReceivedEventArgs : ChatConnectionEventArgs
     {
         public TwitchChatMessage ChatMessage { get; private set; }
         
@@ -22,7 +22,7 @@ namespace OakBot.Model
         }
     }
 
-    public class ChatConnectionConnectedEventArgs : ChatConnectionBaseEventArgs
+    public class ChatConnectionConnectedEventArgs : ChatConnectionEventArgs
     {
         public ChatConnectionConnectedEventArgs(ITwitchAccount account) : base(account)
         {
@@ -30,7 +30,7 @@ namespace OakBot.Model
         }
     }
 
-    public class ChatConnectionAuthenticatedEventArgs : ChatConnectionBaseEventArgs
+    public class ChatConnectionAuthenticatedEventArgs : ChatConnectionEventArgs
     {
         public bool IsAuthenticated { get; private set; }
         
@@ -40,13 +40,23 @@ namespace OakBot.Model
         }
     }
 
-    public class ChatConnectionDisconnectedEventArgs : ChatConnectionBaseEventArgs
+    public class ChatConnectionDisconnectedEventArgs : ChatConnectionEventArgs
     {
         public string Reason { get; private set; }
 
         public ChatConnectionDisconnectedEventArgs(ITwitchAccount account, string reason) : base(account)
         {
             Reason = reason;
+        }
+    }
+
+    public class ChatConnectionChannelJoinedEventArgs : ChatConnectionEventArgs
+    {
+        public string Channel { get; private set; }
+
+        public ChatConnectionChannelJoinedEventArgs(ITwitchAccount account, string channel) : base(account)
+        {
+            Channel = channel;
         }
     }
 }
