@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OakBot.Utility
+namespace OakBot.Model
 {
     /// <typeparam name="T"> Class and newable type</typeparam>
 

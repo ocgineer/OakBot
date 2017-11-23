@@ -75,6 +75,7 @@
         // USERNOTICE Types
         Sub,
         Resub,
+        SubGift,
         Charity
     }
 

@@ -128,6 +128,7 @@
     <Compile Include="Model\ChatterDatabaseService\ChatterDatabaseEventArgs.cs" />
     <Compile Include="Model\ChatterDatabaseService\ChatterDatabaseService.cs" />
     <Compile Include="Model\ChatterDatabaseService\IChatterDatabaseService.cs" />
+    <Compile Include="Model\Core.cs" />
     <Compile Include="Model\Giveaway\GiveawayEntry.cs" />
     <Compile Include="Model\Giveaway\GiveawayModuleSettings.cs" />
     <Compile Include="Model\Giveaway\GiveawayWebsocketEventData.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="Model\ChatConnectionService\TwitchChatMessageEnums.cs" />
     <Compile Include="Model\Static\BinaryFile.cs" />
     <Compile Include="Model\Static\MethodExtensions.cs" />
+    <Compile Include="Model\SubDatabaseService\Sub.cs" />
     <Compile Include="Model\TwitchAPIv5\TwitchAPIv5.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPI.cs" />
     <Compile Include="Model\TwitchAPI\TwitchAPIExceptions.cs" />
@@ -158,7 +160,9 @@
     <Compile Include="Model\TwitchPubSubService\TwitchPubSubService.cs" />
     <Compile Include="ViewModel\ConsoleViewModel.cs" />
     <Compile Include="ViewModel\GiveawayViewModel.cs" />
-    <Compile Include="ViewModel\SubDB.cs" />
+    <Compile Include="Model\SubDatabaseService\Storage.cs" />
+    <Compile Include="Model\SubDatabaseService\SubDB.cs" />
+    <Compile Include="Model\SubDatabaseService\SubService.cs" />
     <Compile Include="ViewModel\SubTrain.cs" />
     <Compile Include="ViewModel\SubWelcomeModel.cs" />
     <Compile Include="ViewModel\TrainTimer.cs">
@@ -250,24 +254,6 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OakBot.Common\OakBot.Common.csproj">
-      <Project>{a3cd149b-7e95-4cf3-92dc-d98fc9c1c761}</Project>
-      <Name>OakBot.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OakBot.Models\OakBot.Models.csproj">
-      <Project>{ec634c4a-a24a-444d-9f3c-614a94e0e0c3}</Project>
-      <Name>OakBot.Models</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OakBot.Services\OakBot.Services.csproj">
-      <Project>{cccfc4da-1c41-44bf-9e8a-a02e8a3aa864}</Project>
-      <Name>OakBot.Services</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OakBot.Utility\OakBot.Utility.csproj">
-      <Project>{51ad85cb-53f1-4b96-bb14-4010dfa7e340}</Project>
-      <Name>OakBot.Utility</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -3,9 +3,7 @@ using System.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 
-using OakBot.Common;
-using OakBot.Models;
-using OakBot.Services;
+using OakBot.ViewModel;
 using OakBot.Model;
 using System.IO;
 
@@ -17,8 +15,8 @@ namespace OakBot.ViewModel
         /// Appdata Location and Database File Location
         /// </summary>
 
-        private static string dbFile = "C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db";
-        private static string trainFile = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\";
+        private const string DBFILE = "C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db";
+        private const string TRAINFILE = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\";
 
         private IChatConnectionService _chat;        
 
@@ -29,7 +27,7 @@ namespace OakBot.ViewModel
 
         private System.Timers.Timer _trainStart = new System.Timers.Timer(300000);
 
-        private string _prefix = "";
+        private string _prefix = string.Empty;
 
         private int _subCount;
 
@@ -50,23 +48,23 @@ namespace OakBot.ViewModel
 
 
             // Initialize Timers
-            _trainEnd = new SubTrain(240000, "One minute until the edeTRAIN departs!!", chat);
+            _trainEnd = new SubTrain(180000, "Two minutes until the edeTRAIN departs!!", chat);
             _train = new SubTrain(300000, "The edeTRAIN has just departed!! edeBRUH", chat);
 
             _trainStart.AutoReset = false;
 
             //Build String for Database
-            BuildConnectionString(dbFile);
+            BuildConnectionString(DBFILE);
 
-            if (!Directory.Exists(trainFile))
+            if (!Directory.Exists(TRAINFILE))
             {
-                Directory.CreateDirectory(trainFile);
-                File.WriteAllText(trainFile + "HighestTrain.txt", _trainHigh.ToString());
+                Directory.CreateDirectory(TRAINFILE);
+                File.WriteAllText(TRAINFILE + "HighestTrain.txt", _trainHigh.ToString());
             }           
                
             
             // Load in Saved Highest Sub Train
-            var tr = new StreamReader(trainFile);
+            var tr = new StreamReader(TRAINFILE + "HighestTrain.txt");
             _trainHigh = Convert.ToInt32(tr.ReadLine());
             tr.Close();
     }
@@ -76,14 +74,21 @@ namespace OakBot.ViewModel
         /// </summary>
         private void _chat_RawMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
+            
             // raw message UserNotice
             if (e.ChatMessage.Command == IrcCommand.UserNotice)
             {
-                if (e.ChatMessage.NoticeType == NoticeMessageType.Sub)
+                if (e.ChatMessage.NoticeType == NoticeMessageType.Sub || e.ChatMessage.NoticeType == NoticeMessageType.Resub || e.ChatMessage.NoticeType == NoticeMessageType.SubGift)
                 {
                     _subCount += 1;
 
                     int tier;
+                    var welcomeMessage = string.Empty;
+                    var ID = e.ChatMessage.UserId;
+                    var Name = e.ChatMessage.SubscriptionLogin;
+                    bool Add = false;
+
+                    var sub = new Sub();                    
 
                     if ((int)e.ChatMessage.SubscriptionPlan == 0)
                     {
@@ -94,12 +99,33 @@ namespace OakBot.ViewModel
                         tier = (int)e.ChatMessage.SubscriptionPlan;
                     }
 
-                    if (_subDB.IsSub(e.ChatMessage.UserId))
+
+                    switch (e.ChatMessage.NoticeType)
                     {
-                        var sub = _subDB.GetSub(e.ChatMessage.UserId);
+                        case NoticeMessageType.Sub:
+                            welcomeMessage = " edeANGEL Welcome " + Name + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP";
+                            break;
+
+                        case NoticeMessageType.Resub:
+                            welcomeMessage = " edeANGEL Welcome back " + Name + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP";
+                            break;
+
+                        case NoticeMessageType.SubGift:
+                            Name = e.ChatMessage.GiftRecipientUserName;
+                            ID = e.ChatMessage.GiftRecipientUserID;
+                            welcomeMessage = " edeANGEL Welcome " + Name + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP (Courtesy of " + e.ChatMessage.SubscriptionLogin + ")";
+                            break;
+                    }
+
+                    if (_subDB.IsSub(ID))
+                    {
+                        Add = false;
+                        sub = _subDB.GetSub(ID);
 
                         if (tier != sub.Tier)
-                        {                            
+                        {
+                            sub.Tier = tier;
+
                             if (tier > sub.Tier)
                             {
                                 _prefix = "+";
@@ -108,198 +134,48 @@ namespace OakBot.ViewModel
                             {
                                 _prefix = "-";
                             }
-                            else
-                            {
-                                _prefix = "";
-                            }
-                            
-                            if (tier == 3)
-                            {
-                                sub.New = true;
-                            }                            
-                        }
-
-                        _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
-
-                        if (_train.IsTrain() || _trainStart.Enabled)
-                        {
-                            _trainCount += 1;
-                            _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
-                            _train.ResetTrain();
-                            _trainEnd.ResetTrain();
-                        }
-                        else
-                        {
-                            _trainCount = 1;
-                            _trainStart.Start();                            
-                        }
-
-                        if (sub.New)
-                        {
-                            _chat.SendMessage("/me " + e.ChatMessage.DisplayName + ", edeO Congrats on the tier 3 sub and your new intro please contact Flash0429, Kushu83 or RedPiIl and we will get you set all setup edeGOOD", false);
-                        }
-
-                        if (_prefix != "")
-                        {
-                            sub.Tier = (int)e.ChatMessage.SubscriptionPlan;
-                            _subDB.UpdateSub(sub);
-                        }
-                    }
-                    else
-                    {
-                        var sub = new Sub()
-                        {
-                            UserID = e.ChatMessage.UserId,
-                            Name = e.ChatMessage.SubscriptionLogin,
-                            Tier = tier
-                        };                        
-
-                        if (tier == 3)
-                        {
-                            sub.New = true;
-                        }
-
-                        _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
-
-                        if (_train.IsTrain() || _trainStart.Enabled)
-                        {
-                            _trainCount += 1;
-                            _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
-                            _train.ResetTrain();
-                            _trainEnd.ResetTrain();
-                        }
-                        else
-                        {
-                            _trainCount = 1;
-                            _trainStart.Start();                            
-                        }
-
-                        if (sub.New)
-                        {
-                            _chat.SendMessage("/me " + e.ChatMessage.DisplayName + ", edeO Congrats on the tier 3 sub and your new intro please contact Flash0429, Kushu83 or RedPiIl and we will get you set all setup edeGOOD", false);
-                        }
-
-                        _subDB.AddSub(sub);
-
-                        
-                    }
-                    if (_trainCount > _trainDayHigh)
-                    {
-                        _trainDayHigh = _trainCount;
-
-                        if (_trainDayHigh > _trainHigh)
-                        {
-                            _trainHigh = _trainDayHigh;
-
-                            // Save Highest Sub Train
-                            var tw = new StreamWriter(trainFile);
-                            tw.WriteLine(_trainHigh);
-                            tw.Close();
-                        }
-                    }
-                }
-
-                if (e.ChatMessage.NoticeType == NoticeMessageType.Resub)
-                {
-                    _subCount += 1;
-
-                    int tier;
-
-                    if ((int)e.ChatMessage.SubscriptionPlan == 0)
-                    {
-                        tier = 1;
-                    }
-                    else
-                    {
-                        tier = (int)e.ChatMessage.SubscriptionPlan;
-                    }                   
-
-                    if (_subDB.IsSub(e.ChatMessage.UserId))
-                    {
-                        var sub = _subDB.GetSub(e.ChatMessage.UserId);
-
-                        if (tier != sub.Tier)
-                        {
-                            if (tier > sub.Tier)
-                            {
-                                _prefix = "+";
-                            }
-                            else if (tier < sub.Tier)
-                            {
-                                _prefix = "-";
-                            }
-                            else
-                            {
-                                _prefix = "";
-                            }
 
                             if (tier == 3)
                             {
                                 sub.New = true;
                             }
                         }
-
-                        _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome Back " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
-
-                        if (_train.IsTrain() || _trainStart.Enabled)
-                        {
-                            _trainCount += 1;
-                            _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
-                            _train.ResetTrain();
-                            _trainEnd.ResetTrain();
-                        }
                         else
                         {
-                            _trainCount = 1;
-                            _trainStart.Start();                            
+                            _prefix = string.Empty;
                         }
 
-                        if (sub.New)
-                        {
-                            _chat.SendMessage("/me " + e.ChatMessage.DisplayName + ", edeO Congrats on the tier 3 sub and your new intro please contact Flash0429, Kushu83 or RedPiIl and we will get you set all setup edeGOOD", false);
-                        }
-
-                        if (_prefix != "")
-                        {
-                            sub.Tier = (int)e.ChatMessage.SubscriptionPlan;
-                            _subDB.UpdateSub(sub);
+                        if(sub.Name != Name)
+                        { 
+                            sub.Name = Name;
                         }
                     }
                     else
                     {
-                        var sub = new Sub()
-                        {
-                            UserID = e.ChatMessage.UserId,
-                            Name = e.ChatMessage.SubscriptionLogin,
-                            Tier = tier
-                        };
-
+                        _prefix = string.Empty;
+                        Add = true;                        
+                        sub.Name = Name;
+                        sub.UserID = ID;
+                        sub.Tier = tier;
                         if (tier == 3)
                         {
                             sub.New = true;
                         }
+                    }
 
-                        _chat.SendMessage("/me " + _prefix + " edeANGEL Welcome Back " + e.ChatMessage.DisplayName + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP", false);
+                    _chat.SendMessage("/me " + _prefix + welcomeMessage, false);
 
-                        if (_train.IsTrain() || _trainStart.Enabled)
-                        {
-                            _trainCount += 1;
-                            _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
-                            _train.ResetTrain();
-                            _trainEnd.ResetTrain();
-                        }
-                        else
-                        {
-                            _trainCount = 1;
-                            _trainStart.Start();
-                        }
-
-                        if (sub.New)
-                        {
-                            _chat.SendMessage("/me " + e.ChatMessage.DisplayName + ", edeO Congrats on the tier 3 sub and your new intro please contact Flash0429, Kushu83 or RedPiIl and we will get you set all setup edeGOOD", false);
-                        }
-
-                        _subDB.AddSub(sub);
+                    if (_train.IsTrain() || _trainStart.Enabled)
+                    {
+                        _trainCount += 1;
+                        _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
+                        _train.ResetTrain();
+                        _trainEnd.ResetTrain();
+                    }
+                    else
+                    {
+                        _trainCount = 1;
+                        _trainStart.Start();
                     }
 
                     if (_trainCount > _trainDayHigh)
@@ -311,25 +187,40 @@ namespace OakBot.ViewModel
                             _trainHigh = _trainDayHigh;
 
                             // Save Highest Sub Train
-                            var tw = new StreamWriter(trainFile);
+                            var tw = new StreamWriter(TRAINFILE + "HighestTrain.txt");
                             tw.WriteLine(_trainHigh);
                             tw.Close();
                         }
                     }
-                }
+
+                    if (sub.New)
+                    {
+                        _chat.SendMessage("/me " + Name + ", edeO Congrats on the tier 3 sub and your new intro please contact Flash0429, Kushu83 or RedPiIl and we will get you set all setup edeGOOD", false);
+                    }                                 
+
+                    if (Add)
+                    {
+                        _subDB.AddSub(sub);
+                    } 
+                    else
+                    {
+                        _subDB.UpdateSub(sub);
+                    }               
+                }               
             }
             
             // normal chat message
             if (e.ChatMessage.Command == IrcCommand.PrivMsg)
             {
                 string[] message = e.ChatMessage.Message.Split();
-                if (e.ChatMessage.IsModerator)
+                if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")))
                 {
                     switch (message[0])
                     {
                         case "~subs":
                             _chat.SendMessage("Subs Today: " + _subCount, false);
                             break;
+
                         case "~train":
                             if (_train.IsTrain())
                             {
@@ -340,14 +231,34 @@ namespace OakBot.ViewModel
                                 _chat.SendMessage("The edeTRAIN has not arrived yet!!", false);
                             }
                             break;
+
                         case "~set":
                             if (message.Length == 2)
                             {
                                 _subCount = Convert.ToInt32(message[1]);
                             }
                             break;
+
+                        case "~test":
+                            if (_subDB.IsSub(e.ChatMessage.UserId))
+                            {
+                                _chat.SendMessage("in", false);
+                            }
+                            else
+                            {
+                                var sub = new Sub();
+
+                                sub.UserID = e.ChatMessage.UserId;
+                                sub.Name = e.ChatMessage.Author;
+                                sub.Tier = 1;
+
+                                _subDB.AddSub(sub);
+
+                            }
+                            break;
                     }
                 }
+
             }
         }
 

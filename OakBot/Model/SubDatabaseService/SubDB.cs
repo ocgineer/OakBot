@@ -3,11 +3,11 @@
 using System.Data.SQLite;
 using System.IO;
 
-using OakBot.Models;
-using OakBot.Services;
+using OakBot.Model;
+using OakBot.ViewModel;
 
 
-namespace OakBot.ViewModel
+namespace OakBot.Model
 {
     public class SubDB
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OakBot.Common
+namespace OakBot.Model
 {
     public class Storage
     {

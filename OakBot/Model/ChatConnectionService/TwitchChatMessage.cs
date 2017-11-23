@@ -257,6 +257,7 @@ namespace OakBot.Model
                                 // USERSNOTICE msg-id tag
                                 case "sub": NoticeType = NoticeMessageType.Sub; break;
                                 case "resub": NoticeType = NoticeMessageType.Resub; break;
+                                case "subgift": NoticeType = NoticeMessageType.SubGift; break;
                                 case "charity": NoticeType = NoticeMessageType.Charity; break;
                             }
                             break;
@@ -287,6 +288,16 @@ namespace OakBot.Model
                         case "system-msg":
                             SubscriptionSystemMessage = tag.Groups["value"].Value.Replace(@"\s", " ");
                             break;
+
+                        // USERNOTICE SubGift Tags
+                        case "msg-param-recipient-display-name":
+                            GiftRecipientDisplayName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-recipient-user-name":
+                            GiftRecipientUserName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-recipient-id":
+                            GiftRecipientUserID = tag.Groups["value"].Value; break;
                     }
                 }
 
@@ -415,6 +426,15 @@ namespace OakBot.Model
         /// Channel Id of the channel the message was send in.
         /// </summary>
         public string ChannelId { get; private set; }
+
+        /// <summary>
+        /// Displaynme, UserName, and UserID of Recipient for A sub gift the sender goes to Normal values
+        /// </summary>
+        public string GiftRecipientDisplayName { get; private set; }
+
+        public string GiftRecipientUserName { get; private set; }
+
+        public string GiftRecipientUserID { get; private set; }
 
         #endregion
 
