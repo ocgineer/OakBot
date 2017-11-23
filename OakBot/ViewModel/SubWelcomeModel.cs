@@ -3,9 +3,9 @@ using System.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 
-using OakBot.ViewModel;
 using OakBot.Model;
 using System.IO;
+using System.Timers;
 
 namespace OakBot.ViewModel
 {
@@ -15,17 +15,16 @@ namespace OakBot.ViewModel
         /// Appdata Location and Database File Location
         /// </summary>
 
-        private const string DBFILE = "C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db";
+        private const string DBFILE = "Data Source=C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db;Version=3;";
         private const string TRAINFILE = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\";
 
-        private IChatConnectionService _chat;        
+        private IChatConnectionService _chat;
 
-        private SubDB _subDB = new SubDB();
+        private DBService DBsvc;
 
-        private SubTrain _train;
-        private SubTrain _trainEnd;
-
-        private System.Timers.Timer _trainStart = new System.Timers.Timer(300000);
+        private SubTrain _trainStart = new SubTrain(300000);
+        private SubTrain _trainEnd = new SubTrain(300000);
+        private SubTrain _trainWarn = new SubTrain(180000);        
 
         private string _prefix = string.Empty;
 
@@ -48,20 +47,18 @@ namespace OakBot.ViewModel
 
 
             // Initialize Timers
-            _trainEnd = new SubTrain(180000, "Two minutes until the edeTRAIN departs!!", chat);
-            _train = new SubTrain(300000, "The edeTRAIN has just departed!! edeBRUH", chat);
+            _trainWarn.SetElapsed(TrainWarnElapsedAction);
+            _trainEnd.SetElapsed(TrainEndElapsedAction);
 
-            _trainStart.AutoReset = false;
 
-            //Build String for Database
-            BuildConnectionString(DBFILE);
+            //Create Svc and open Connection to DB
+            DBsvc = new DBService(DBFILE);
 
             if (!Directory.Exists(TRAINFILE))
             {
                 Directory.CreateDirectory(TRAINFILE);
                 File.WriteAllText(TRAINFILE + "HighestTrain.txt", _trainHigh.ToString());
-            }           
-               
+            }                  
             
             // Load in Saved Highest Sub Train
             var tr = new StreamReader(TRAINFILE + "HighestTrain.txt");
@@ -117,10 +114,10 @@ namespace OakBot.ViewModel
                             break;
                     }
 
-                    if (_subDB.IsSub(ID))
+                    if (IsSub(ID))
                     {
                         Add = false;
-                        sub = _subDB.GetSub(ID);
+                        sub = GetSub(ID);
 
                         if (tier != sub.Tier)
                         {
@@ -165,17 +162,17 @@ namespace OakBot.ViewModel
 
                     _chat.SendMessage("/me " + _prefix + welcomeMessage, false);
 
-                    if (_train.IsTrain() || _trainStart.Enabled)
+                    if (_trainEnd.IsTrain() || _trainStart.IsTrain())
                     {
                         _trainCount += 1;
                         _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
-                        _train.ResetTrain();
                         _trainEnd.ResetTrain();
+                        _trainWarn.ResetTrain();
                     }
                     else
                     {
                         _trainCount = 1;
-                        _trainStart.Start();
+                        _trainStart.StartTrain();
                     }
 
                     if (_trainCount > _trainDayHigh)
@@ -200,11 +197,11 @@ namespace OakBot.ViewModel
 
                     if (Add)
                     {
-                        _subDB.AddSub(sub);
+                        AddSub(sub);
                     } 
                     else
                     {
-                        _subDB.UpdateSub(sub);
+                        UpdateSub(sub);
                     }               
                 }               
             }
@@ -222,9 +219,9 @@ namespace OakBot.ViewModel
                             break;
 
                         case "~train":
-                            if (_train.IsTrain())
+                            if (_trainEnd.IsTrain())
                             {
-                                _chat.SendMessage("Train Length: " + _trainCount + " - Train Departure: " + _train.GetTime() + " - Longest Train Today: " + _trainDayHigh + " - Longest Train All Time: " + _trainHigh, false);
+                                _chat.SendMessage("Train Length: " + _trainCount + " - Train Departure: " + _trainEnd.GetTime() + " - Longest Train Today: " + _trainDayHigh + " - Longest Train All Time: " + _trainHigh, false);
                             }
                             else
                             {
@@ -240,7 +237,7 @@ namespace OakBot.ViewModel
                             break;
 
                         case "~test":
-                            if (_subDB.IsSub(e.ChatMessage.UserId))
+                            if (IsSub(e.ChatMessage.UserId))
                             {
                                 _chat.SendMessage("in", false);
                             }
@@ -252,7 +249,7 @@ namespace OakBot.ViewModel
                                 sub.Name = e.ChatMessage.Author;
                                 sub.Tier = 1;
 
-                                _subDB.AddSub(sub);
+                                AddSub(sub);
 
                             }
                             break;
@@ -260,17 +257,21 @@ namespace OakBot.ViewModel
                 }
 
             }
-        }
+        }                       
 
-        public void BuildConnectionString(string dbFile)
-        {
-            if (String.IsNullOrEmpty(Storage.ConnectionString))
-            {
-                Storage.ConnectionString = string.Format("Data Source={0};Version=3;", dbFile);
+        private void AddSub(Sub newSub) => DBsvc.Add(newSub);
 
-                var svc = new SubService();
-            }
-        }
+        private void UpdateSub(Sub existingSub) => DBsvc.Update(existingSub);
+
+        private Sub GetSub(string id) => DBsvc.GetById(id);
+
+        private bool IsSub(string id) => string.IsNullOrEmpty((DBsvc.GetById(id)).Name) ? false : true;
+
+        private void TrainEndElapsedAction(object sender, ElapsedEventArgs e) => _chat.SendMessage("The edeTRAIN has just departed!! edeBRUH", false);
+
+        private void TrainWarnElapsedAction(object sender, ElapsedEventArgs e) => _chat.SendMessage("Two minutes until the edeTRAIN departs!!", false);
+
+
 
         /// <summary>
         /// Shutdown message handler, handle shutdown.

@@ -1,13 +1,15 @@
-﻿namespace OakBot.ViewModel
+﻿using System.Timers;
+
+namespace OakBot.ViewModel
 {
     public class SubTrain 
     {
 
-        private TrainTimer Train;
+        private CustomTimer Train;
 
-        public SubTrain(double interval, string message, Model.IChatConnectionService chat)
+        public SubTrain(double interval)
         {
-            Train = new TrainTimer(interval, message, chat);
+            Train = new CustomTimer(interval);
             
         }
 
@@ -25,7 +27,7 @@
 
         public string GetTime()
         {
-            return Train.TimeLeft;
+            return Train.GetTimeLeft();
         }
 
         public void ResetTrain()
@@ -37,6 +39,11 @@
         public void StartTrain()
         {
             Train.Start();
+        }
+
+        public void SetElapsed(ElapsedEventHandler e)
+        {
+            Train.Elapsed += e;
         }
     }
 }
