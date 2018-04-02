@@ -39,7 +39,7 @@ namespace OakBot.ViewModel
         /// </summary>
         public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse,
             ITwitchPubSubService pss)
-        {
+        {          
             Title = "OakBot - YATB";
 
             // Set dependency injection references
