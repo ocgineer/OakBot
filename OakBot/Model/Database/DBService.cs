@@ -7,13 +7,37 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace OakBot.Model
-{
-    public class DBService : BaseService<Sub>
+{    
+    public class DBService
     {
-        public DBService(string dbConnectionString)
-            : base(dbConnectionString)
-        {
 
+        public DBService()
+        {
+           
+        }
+
+        public class SubService : BaseService<Sub>
+        {
+            public SubService(string Connection) : base(Connection)
+            {
+
+            }
+        }
+
+        public class BDayService : BaseService<BDay>
+        {
+            public BDayService(string Connection) : base(Connection)
+            {
+
+            }
+        }
+
+        public class AutoCastService : BaseService<Caster>
+        {
+            public AutoCastService(string Connection) : base(Connection)
+            {
+
+            }
         }
 
     }

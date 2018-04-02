@@ -12,9 +12,9 @@
   See http://www.galasoft.ch/mvvm
 */
 
+using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
-using Microsoft.Practices.ServiceLocation;
 
 using OakBot.Model;
 
@@ -58,6 +58,7 @@ namespace OakBot.ViewModel
 
             // Register ViewModels create instance Immediately as no view is using them yet
             SimpleIoc.Default.Register<SubWelcomeModel>(true);
+            SimpleIoc.Default.Register<BDayModel>(true);
         }
 
         public MainViewModel Main
@@ -98,8 +99,16 @@ namespace OakBot.ViewModel
             {
                 return ServiceLocator.Current.GetInstance<SubWelcomeModel>();
             }
-        }        
-        
+        }
+
+        public BDayModel BDay
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<BDayModel>();
+            }
+        }
+
         public static void Cleanup()
         {
             // TODO Clear the ViewModels

@@ -76,7 +76,9 @@
         Sub,
         Resub,
         SubGift,
-        Charity
+        Charity,
+        Raid,
+        Ritual
     }
 
     /// <summary>

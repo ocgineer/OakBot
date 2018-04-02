@@ -6,33 +6,43 @@ using GalaSoft.MvvmLight.Messaging;
 using OakBot.Model;
 using System.IO;
 using System.Timers;
+using System.Windows.Media;
+using System.Linq;
 
 namespace OakBot.ViewModel
 {
     public class SubWelcomeModel : ViewModelBase
     {
         /// <summary>
-        /// Appdata Location and Database File Location
+        /// Train File Location and Database File Location
         /// </summary>
 
-        private const string DBFILE = "Data Source=C:\\Users\\Flash\\AppData\\Roaming\\OakBot\\DB\\SubDB.db;Version=3;";
-        private const string TRAINFILE = @"C:\Users\Flash\AppData\Roaming\OakBot\Bin\";
+        private static readonly string DBFILE = "Data Source= " + Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\OakBot\\DB\\MainDB.db;Version=3;";
+        private static readonly string TRAINFILE = Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData) + "\\OakBot\\Bin";
 
-        private IChatConnectionService _chat;
+        private IChatConnectionService chat;
 
-        private DBService DBsvc;
+        private DBService.SubService svc;
 
-        private SubTrain _trainStart = new SubTrain(300000);
-        private SubTrain _trainEnd = new SubTrain(300000);
-        private SubTrain _trainWarn = new SubTrain(180000);        
+        private CustomTimer trainStart = new CustomTimer(300000);
+        private CustomTimer trainEnd = new CustomTimer(300000);
+        private CustomTimer trainWarn = new CustomTimer(180000);
 
-        private string _prefix = string.Empty;
+        private CustomTimer raid = new CustomTimer(300000);
 
-        private int _subCount;
+        private string prefix = string.Empty;
 
-        private int _trainCount = 0;
-        private int _trainDayHigh = 0;
-        private int _trainHigh = 0;
+        private int subCount;
+
+        private int trainCount = 0;
+        private int trainDayHigh = 0;
+        private int trainHigh = 0;
+
+        private const string mLink = "https://multi.raredrop.co/tedemonster";
+        private const string noMulti = "Sorry, No Multi Right Now";
+        private string multi = noMulti;
+        private string multiMessage = "Watch EdE and Friends Here:";
 
         public SubWelcomeModel(IChatConnectionService chat)
         {
@@ -40,29 +50,31 @@ namespace OakBot.ViewModel
             Messenger.Default.Register<NotificationMessage>(this, "shutdown", (msg) => { _vm_OnShutdown(); });
 
             // Set references to services
-            _chat = chat; // Twitch chat service
+            this.chat = chat; // Twitch chat service
 
             // Register to events
-            _chat.RawMessageReceived += _chat_RawMessageReceived;
+            this.chat.RawMessageReceived += _chat_RawMessageReceived;
 
 
             // Initialize Timers
-            _trainWarn.SetElapsed(TrainWarnElapsedAction);
-            _trainEnd.SetElapsed(TrainEndElapsedAction);
+            trainWarn.Elapsed += TrainWarnElapsedAction;
+            trainEnd.Elapsed += TrainEndElapsedAction;
+
+            raid.Elapsed += RaidElapsedAction;
 
 
             //Create Svc and open Connection to DB
-            DBsvc = new DBService(DBFILE);
+            svc = new DBService.SubService(DBFILE);
 
             if (!Directory.Exists(TRAINFILE))
             {
                 Directory.CreateDirectory(TRAINFILE);
-                File.WriteAllText(TRAINFILE + "HighestTrain.txt", _trainHigh.ToString());
+                File.WriteAllText(TRAINFILE + "\\HighestTrain.txt", trainHigh.ToString());
             }                  
             
             // Load in Saved Highest Sub Train
-            var tr = new StreamReader(TRAINFILE + "HighestTrain.txt");
-            _trainHigh = Convert.ToInt32(tr.ReadLine());
+            var tr = new StreamReader(TRAINFILE + "\\HighestTrain.txt");
+            trainHigh = Convert.ToInt32(tr.ReadLine());
             tr.Close();
     }
 
@@ -71,21 +83,21 @@ namespace OakBot.ViewModel
         /// </summary>
         private void _chat_RawMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
-            
+
             // raw message UserNotice
             if (e.ChatMessage.Command == IrcCommand.UserNotice)
             {
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Sub || e.ChatMessage.NoticeType == NoticeMessageType.Resub || e.ChatMessage.NoticeType == NoticeMessageType.SubGift)
                 {
-                    _subCount += 1;
-
+                    subCount += 1;
+                    
                     int tier;
                     var welcomeMessage = string.Empty;
                     var ID = e.ChatMessage.UserId;
                     var Name = e.ChatMessage.SubscriptionLogin;
                     bool Add = false;
 
-                    var sub = new Sub();                    
+                    var sub = new Sub();
 
                     if ((int)e.ChatMessage.SubscriptionPlan == 0)
                     {
@@ -100,17 +112,17 @@ namespace OakBot.ViewModel
                     switch (e.ChatMessage.NoticeType)
                     {
                         case NoticeMessageType.Sub:
-                            welcomeMessage = " edeANGEL Welcome " + Name + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP";
+                            welcomeMessage = " edeHI Welcome " + Name + ", edeHYPE Thank you for being our " + subCount + " subscriber today!! edeWINK edePIMP edePIMP";
                             break;
 
                         case NoticeMessageType.Resub:
-                            welcomeMessage = " edeANGEL Welcome back " + Name + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP";
+                            welcomeMessage = " edeHI Welcome back " + Name + ", edeGOOD Thank you for being our " + subCount + " subscriber today!! edeWINK edePIMP edePIMP";
                             break;
 
                         case NoticeMessageType.SubGift:
                             Name = e.ChatMessage.GiftRecipientUserName;
                             ID = e.ChatMessage.GiftRecipientUserID;
-                            welcomeMessage = " edeANGEL Welcome " + Name + ", edeWINK edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP edePIMP (Courtesy of " + e.ChatMessage.SubscriptionLogin + ")";
+                            welcomeMessage = " edeHI Welcome " + Name + ", edeHYPE Thank you for being our " + subCount + " subscriber today!! edeWINK edePIMP edePIMP (Courtesy of " + e.ChatMessage.SubscriptionLogin + ") edeLOVE edeLOVE";
                             break;
                     }
 
@@ -125,11 +137,11 @@ namespace OakBot.ViewModel
 
                             if (tier > sub.Tier)
                             {
-                                _prefix = "+";
+                                prefix = "+";
                             }
                             else if (tier < sub.Tier)
                             {
-                                _prefix = "-";
+                                prefix = "-";
                             }
 
                             if (tier == 3)
@@ -139,18 +151,18 @@ namespace OakBot.ViewModel
                         }
                         else
                         {
-                            _prefix = string.Empty;
+                            prefix = string.Empty;
                         }
 
-                        if(sub.Name != Name)
-                        { 
+                        if (sub.Name != Name)
+                        {
                             sub.Name = Name;
                         }
                     }
                     else
                     {
-                        _prefix = string.Empty;
-                        Add = true;                        
+                        prefix = string.Empty;
+                        Add = true;
                         sub.Name = Name;
                         sub.UserID = ID;
                         sub.Tier = tier;
@@ -160,116 +172,473 @@ namespace OakBot.ViewModel
                         }
                     }
 
-                    _chat.SendMessage("/me " + _prefix + welcomeMessage, false);
+                    chat.SendMessage("/me " + prefix + " " + welcomeMessage, false);
 
-                    if (_trainEnd.IsTrain() || _trainStart.IsTrain())
+                    if (trainEnd.Enabled || trainStart.Enabled)
                     {
-                        _trainCount += 1;
-                        _chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + _trainCount, false);
-                        _trainEnd.ResetTrain();
-                        _trainWarn.ResetTrain();
+                        trainCount += 1;
+                        chat.SendMessage("edeTRAIN edeTRAIN edeTRAIN edeTRAIN edeTRAIN " + trainCount, false);
+                        trainEnd.Reset();
+                        trainWarn.Reset();
                     }
                     else
                     {
-                        _trainCount = 1;
-                        _trainStart.StartTrain();
+                        trainCount = 1;
+                        trainStart.Start();
                     }
 
-                    if (_trainCount > _trainDayHigh)
+                    if (trainCount > trainDayHigh)
                     {
-                        _trainDayHigh = _trainCount;
+                        trainDayHigh = trainCount;
 
-                        if (_trainDayHigh > _trainHigh)
+                        if (trainDayHigh > trainHigh)
                         {
-                            _trainHigh = _trainDayHigh;
+                            trainHigh = trainDayHigh;
 
                             // Save Highest Sub Train
                             var tw = new StreamWriter(TRAINFILE + "HighestTrain.txt");
-                            tw.WriteLine(_trainHigh);
+                            tw.WriteLine(trainHigh);
                             tw.Close();
                         }
                     }
 
                     if (sub.New)
                     {
-                        _chat.SendMessage("/me " + Name + ", edeO Congrats on the tier 3 sub and your new intro please contact Flash0429, Kushu83 or RedPiIl and we will get you set all setup edeGOOD", false);
-                    }                                 
+                        chat.SendMessage("/me " + Name + ", edeHYPE Congrats on the tier 3 sub please contact Flash0429 and he will get you set all setup with your intro!! edeGOOD", false);
+                    }
 
                     if (Add)
                     {
                         AddSub(sub);
-                    } 
+                    }
                     else
                     {
                         UpdateSub(sub);
-                    }               
-                }               
+                    }
+
+                    var r = new Random();
+                    var color = String.Format("#{0:X6}", r.Next(0x1000000));
+
+                    chat.SendMessage("/color " + color, false);
+
+
+                }
+
+                if (e.ChatMessage.NoticeType == NoticeMessageType.Raid)
+                {
+                    chat.SendMessage("/followersoff", false);
+
+                    raid.Start();
+
+                    chat.SendMessage("Thank You " + e.ChatMessage.RaidUserName + " For the raid of " + e.ChatMessage.RaidCount + " viewers! edeCAP edeZORD edeCAP edeZORD edeCAP edeZORD", false);
+
+                }
             }
-            
+
             // normal chat message
             if (e.ChatMessage.Command == IrcCommand.PrivMsg)
             {
                 string[] message = e.ChatMessage.Message.Split();
+
+                var emotes = e.ChatMessage.UsedEmotes;
+
+                
+
+                if (e.ChatMessage.Message.Contains("miistyDab") || e.ChatMessage.Message.Contains("broD"))
+                {
+                    chat.SendMessage("/timeout " + e.ChatMessage.Author + " 1 No Dabbing", false);
+                }
+
+                if (message[0] == "!multi")
+                {
+                    if (multi.Contains("Sorry, No"))
+                    {
+                        chat.SendMessage(multi, false);
+                    }
+                    else
+                    {
+                        chat.SendMessage(multiMessage + " " + multi + "/Lcolumns", false);
+                    }
+                }
+                
+                if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")) || e.ChatMessage.IsSubscriber)
+                {
+                    switch (message[0])
+                    {
+                        case "!subs":
+                            chat.SendMessage("Subs Today: " + subCount, false);
+                            break;
+
+                        case "!train":
+                            if (trainEnd.Enabled)
+                            {
+                                chat.SendMessage("Train Length: " + trainCount + " - Train Departure: " + trainEnd.GetTimeLeft() + " - Longest Train Today: " + trainDayHigh + " - Longest Train All Time: " + trainHigh, false);
+                            }
+                            else
+                            {
+                                chat.SendMessage("The edeTRAIN has not arrived yet!!", false);
+                            }
+                            break;                
+
+                    }
+                }
+
+                
+                
                 if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")))
                 {
                     switch (message[0])
                     {
-                        case "~subs":
-                            _chat.SendMessage("Subs Today: " + _subCount, false);
-                            break;
-
-                        case "~train":
-                            if (_trainEnd.IsTrain())
-                            {
-                                _chat.SendMessage("Train Length: " + _trainCount + " - Train Departure: " + _trainEnd.GetTime() + " - Longest Train Today: " + _trainDayHigh + " - Longest Train All Time: " + _trainHigh, false);
-                            }
-                            else
-                            {
-                                _chat.SendMessage("The edeTRAIN has not arrived yet!!", false);
-                            }
-                            break;
-
                         case "~set":
                             if (message.Length == 2)
                             {
-                                _subCount = Convert.ToInt32(message[1]);
+                                subCount = Convert.ToInt32(message[1]);
                             }
                             break;
 
-                        case "~test":
-                            if (IsSub(e.ChatMessage.UserId))
+                        case "~start":
+                            trainStart.Start();
+                            break;
+
+                        case "!multiset":
+                            SetMulti(message);                            
+                            break;
+
+                        case "!multiadd":
+                            if (multi.Contains("Sorry, No"))
                             {
-                                _chat.SendMessage("in", false);
+                                chat.SendMessage("Sorry, No multi to edit right now, use !multiset to set the multi first", false);
                             }
                             else
                             {
-                                var sub = new Sub();
+                                AddMulti(message);
+                            }
+                            break;
 
-                                sub.UserID = e.ChatMessage.UserId;
-                                sub.Name = e.ChatMessage.Author;
-                                sub.Tier = 1;
+                        case "!multidel":
+                            if (multi.Contains("Sorry, No"))
+                            {
+                                chat.SendMessage("Sorry, No multi to edit right now, use !multiset to set the multi first", false);
+                            }
+                            else
+                            {
+                                DelMulti(message);
+                            }
+                            break;
 
-                                AddSub(sub);
-
+                        case "!multimsg":
+                            if (multi.Contains("Sorry, No"))
+                            {
+                                chat.SendMessage("Sorry, No multi to edit right now, use !multiset to set the multi first", false);
+                            }
+                            else
+                            {
+                                multiMessage = string.Join(" ", message.Select(i => i.Trim()).Skip(1));
+                                chat.SendMessage("Changed edeGOOD", false);
+                            }
+                            break;
+                        case "!multiclear":
+                            if (multi.Contains("Sorry, No"))
+                            {
+                                chat.SendMessage("Already Cleared edeBRUH", false);
+                            }
+                            else
+                            {
+                                multi = noMulti;
+                                chat.SendMessage("Multi Cleared edeANGEL", false);
                             }
                             break;
                     }
                 }
-
             }
-        }                       
+        }
 
-        private void AddSub(Sub newSub) => DBsvc.Add(newSub);
+        private void SetMulti(string[] m)
+        {
+            var dups = 0;
+            var serv = "t";
+            if (m.Length >= 2)
+            {
+                var i = 1;
 
-        private void UpdateSub(Sub existingSub) => DBsvc.Update(existingSub);
+                multi = mLink;
 
-        private Sub GetSub(string id) => DBsvc.GetById(id);
+                while (i < m.Length)
+                {
+                    switch (m[i].ToLower())
+                    {
+                        case "twitch":
+                            serv = "t";
+                            i += 1;
+                            break;
+                        case "facebook":
+                            serv = "f";
+                            i += 1;
+                            break;
+                        case "mixer":
+                            serv = "m";
+                            i += 1;
+                            break;
+                        case "youtube":
+                            serv = "y";
+                            i += 1;
+                            break;
+                        case "smashcast":
+                            serv = "sc";
+                            i += 1;
+                            break;
+                        case "streamme":
+                            serv = "sm";
+                            i += 1;
+                            break;
+                        case "douyu":
+                            serv = "d";
+                            i += 1;
+                            break;
+                        case "chew":
+                            serv = "c";
+                            i += 1;
+                            break;
+                        case "liveedu":
+                            serv = "l";
+                            i += 1;
+                            break;
+                        case "mobcrush":
+                            serv = "M";
+                            i += 1;
+                            break;
+                        case "gg":
+                            serv = "g";
+                            i += 1;
+                            break;
+                        case "ustream":
+                            serv = "u";
+                            i += 1;
+                            break;
+                        case "cybertv":
+                            serv = "C";
+                            i += 1;
+                            break;                        
+                    }
 
-        private bool IsSub(string id) => string.IsNullOrEmpty((DBsvc.GetById(id)).Name) ? false : true;
+                    if (!multi.Contains(m[i].ToLower()))
+                    {
+                        multi += "/" + serv + m[i].ToLower();
+                        i += 1;
+                    }
+                    else
+                    {
+                        dups += 1;
+                        i += 1;
+                    }
+                }
 
-        private void TrainEndElapsedAction(object sender, ElapsedEventArgs e) => _chat.SendMessage("The edeTRAIN has just departed!! edeBRUH", false);
+                chat.SendMessage("Multi Set edeGOOD", false);
+                if (dups > 0)
+                {
+                    chat.SendMessage(dups + " Duplicate casters not added edeWINK", false);
+                }
+            }
+            else
+            {
+                chat.SendMessage("Please enter a caster name to set multi edeBRUH", false);
+            }
 
-        private void TrainWarnElapsedAction(object sender, ElapsedEventArgs e) => _chat.SendMessage("Two minutes until the edeTRAIN departs!!", false);
+            
+            
+        }
+
+        private void AddMulti(string[] m)
+        {
+            var dups = 0;
+            var serv = "t";
+            if (m.Length >= 2)
+            {
+                var i = 1;     
+
+                while (i < m.Length)
+                {
+                    switch (m[i].ToLower())
+                    {
+                        case "twitch":
+                            serv = "t";
+                            i += 1;
+                            break;
+                        case "facebook":
+                            serv = "f";
+                            i += 1;
+                            break;
+                        case "mixer":
+                            serv = "m";
+                            i += 1;
+                            break;
+                        case "youtube":
+                            serv = "y";
+                            i += 1;
+                            break;
+                        case "smashcast":
+                            serv = "sc";
+                            i += 1;
+                            break;
+                        case "streamme":
+                            serv = "sm";
+                            i += 1;
+                            break;
+                        case "douyu":
+                            serv = "c";
+                            i += 1;
+                            break;
+                        case "chew":
+                            serv = "d";
+                            i += 1;
+                            break;
+                        case "liveedu":
+                            serv = "l";
+                            i += 1;
+                            break;
+                        case "mobcrush":
+                            serv = "M";
+                            i += 1;
+                            break;
+                        case "gg":
+                            serv = "g";
+                            i += 1;
+                            break;
+                        case "ustream":
+                            serv = "u";
+                            i += 1;
+                            break;
+                        case "cybertv":
+                            serv = "C";
+                            i += 1;
+                            break;                        
+                    }
+
+                    if (!multi.Contains(m[i].ToLower()))
+                    {
+                        multi += "/" + serv + m[i].ToLower();
+                        i += 1;
+                    }
+                    else
+                    {
+                        dups += 1;
+                        i += 1;
+                    }
+                }
+
+                chat.SendMessage("Multi Set edeGOOD", false);
+                if (dups > 0)
+                {
+                    chat.SendMessage(dups + " Duplicate casters not added edeWINK", false);
+                }
+            }
+            else
+            {
+                chat.SendMessage("Please enter a caster name to add to multi edeBRUH", false);
+            }
+
+            
+        }
+
+        private void DelMulti(string[] m)
+        {
+            var serv = "t";
+            if (m.Length >= 2)
+            {
+                var i = 1;
+
+                while (i < m.Length)
+                {
+                    switch (m[i].ToLower())
+                    {
+                        case "twitch":
+                            serv = "t";
+                            i += 1;
+                            break;
+                        case "facebook":
+                            serv = "f";
+                            i += 1;
+                            break;
+                        case "mixer":
+                            serv = "m";
+                            i += 1;
+                            break;
+                        case "youtube":
+                            serv = "y";
+                            i += 1;
+                            break;
+                        case "smashcast":
+                            serv = "sc";
+                            i += 1;
+                            break;
+                        case "streamme":
+                            serv = "sm";
+                            i += 1;
+                            break;
+                        case "douyu":
+                            serv = "c";
+                            i += 1;
+                            break;
+                        case "chew":
+                            serv = "d";
+                            i += 1;
+                            break;
+                        case "liveedu":
+                            serv = "l";
+                            i += 1;
+                            break;
+                        case "mobcrush":
+                            serv = "M";
+                            i += 1;
+                            break;
+                        case "gg":
+                            serv = "g";
+                            i += 1;
+                            break;
+                        case "ustream":
+                            serv = "u";
+                            i += 1;
+                            break;
+                        case "cybertv":
+                            serv = "C";
+                            i += 1;
+                            break;                        
+                    }
+
+                    if (m[i].ToLower() == "edemonster")
+                    {
+                        chat.SendMessage("Cannot remove channel name from multi link edeBRUH", false);
+                        i += 1;
+                    }
+                    else
+                    {
+                        multi = multi.Replace("/" + serv + m[i].ToLower(), "");
+                        i += 1;
+                    }
+                }
+
+                chat.SendMessage("Removed edeFEELS ", false);
+            }
+            else
+            {
+                chat.SendMessage("Please enter a caster name to remove from multi edeBRUH", false);
+            }
+            
+        }
+
+        private void AddSub(Sub newSub) => svc.Add(newSub);
+
+        private void UpdateSub(Sub existingSub) => svc.Update(existingSub);
+
+        private Sub GetSub(string id) => svc.GetById(id);
+
+        private bool IsSub(string id) => string.IsNullOrEmpty((svc.GetById(id)).Name) ? false : true;
+
+        private void TrainEndElapsedAction(object sender, ElapsedEventArgs e) => chat.SendMessage("The edeTRAIN has just departed!! edeBRUH", false);
+
+        private void TrainWarnElapsedAction(object sender, ElapsedEventArgs e) => chat.SendMessage("Two minutes until the edeTRAIN departs!!", false);
+
+        private void RaidElapsedAction(object sender, ElapsedEventArgs e) => chat.SendMessage("/followers 5m", false);
 
 
 

@@ -259,6 +259,7 @@ namespace OakBot.Model
                                 case "resub": NoticeType = NoticeMessageType.Resub; break;
                                 case "subgift": NoticeType = NoticeMessageType.SubGift; break;
                                 case "charity": NoticeType = NoticeMessageType.Charity; break;
+                                case "raid": NoticeType = NoticeMessageType.Raid; break;
                             }
                             break;
                 
@@ -298,6 +299,20 @@ namespace OakBot.Model
 
                         case "msg-param-recipient-id":
                             GiftRecipientUserID = tag.Groups["value"].Value; break;
+
+                        // USERNOTICE Raid tags
+                        case "msg-param-displayName":
+                            RaidDisplayName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-login":
+                            RaidUserName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-viewerCount":
+                            RaidCount = tag.Groups["value"].Value; break;
+
+                        // USERNOTICE Ritual Tags
+                        case "msg-param-ritual-name":
+                            NewUser = tag.Groups["value"].Value; break;
                     }
                 }
 
@@ -435,6 +450,20 @@ namespace OakBot.Model
         public string GiftRecipientUserName { get; private set; }
 
         public string GiftRecipientUserID { get; private set; }
+
+        /// <summary>
+        /// Name of channel and Number of Viewers for a Raid
+        /// </summary>
+        public string RaidUserName { get; private set; }
+
+        public string RaidDisplayName { get; private set; }
+
+        public string RaidCount { get; private set; }
+
+        /// <summary>
+        /// Name of New Chatter
+        /// </summary>
+        public string NewUser { get; private set; }
 
         #endregion
 
