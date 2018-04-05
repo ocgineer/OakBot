@@ -7,7 +7,6 @@
   
   In the View:
   DataContext="{Binding Source={StaticResource Locator}, Path=ViewModelName}"
-
   You can also use Blend to do all this with the tool's support.
   See http://www.galasoft.ch/mvvm
 */
@@ -54,7 +53,7 @@ namespace OakBot.ViewModel
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<ConsoleViewModel>();
             SimpleIoc.Default.Register<GiveawaysViewModel>();
-                        
+
 
             // Register ViewModels create instance Immediately as no view is using them yet
             SimpleIoc.Default.Register<SubWelcomeModel>(true);

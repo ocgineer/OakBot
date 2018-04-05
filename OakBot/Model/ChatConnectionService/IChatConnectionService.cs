@@ -23,5 +23,7 @@ namespace OakBot.Model
 
         void SendMessage(string message, bool isCaster);
 
+        string GetChannelName();
+
     }
 }

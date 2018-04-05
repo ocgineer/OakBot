@@ -258,7 +258,7 @@ namespace OakBot.Model
                                 case "sub": NoticeType = NoticeMessageType.Sub; break;
                                 case "resub": NoticeType = NoticeMessageType.Resub; break;
                                 case "subgift": NoticeType = NoticeMessageType.SubGift; break;
-                                case "charity": NoticeType = NoticeMessageType.Charity; break;
+                                case "ritual": NoticeType = NoticeMessageType.Ritual; break;
                                 case "raid": NoticeType = NoticeMessageType.Raid; break;
                             }
                             break;
@@ -299,6 +299,9 @@ namespace OakBot.Model
 
                         case "msg-param-recipient-id":
                             GiftRecipientUserID = tag.Groups["value"].Value; break;
+
+                        case "msg-param-sender-count":
+                            GiftSenderCount = tag.Groups["value"].Value; break;
 
                         // USERNOTICE Raid tags
                         case "msg-param-displayName":
@@ -450,6 +453,11 @@ namespace OakBot.Model
         public string GiftRecipientUserName { get; private set; }
 
         public string GiftRecipientUserID { get; private set; }
+
+        ///<summary>
+        /// Number of times user has gifted a sub
+        /// </summary>
+        public string GiftSenderCount { get; private set; }
 
         /// <summary>
         /// Name of channel and Number of Viewers for a Raid

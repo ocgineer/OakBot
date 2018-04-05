@@ -18,10 +18,11 @@ namespace OakBot.ViewModel
         /// </summary>
 
         private static readonly string DBFILE = "Data Source= " + Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\OakBot\\DB\\MainDB.db;Version=3;";
-        private static readonly string TRAINFILE = Environment.GetFolderPath(
-            Environment.SpecialFolder.ApplicationData) + "\\OakBot\\Bin";
+        private static readonly string TRAINFILE = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\OakBot\\Bin";
 
         private IChatConnectionService chat;
+
+        private string Channel;
 
         private DBService.SubService svc;
 
@@ -30,6 +31,8 @@ namespace OakBot.ViewModel
         private CustomTimer trainWarn = new CustomTimer(180000);
 
         private CustomTimer raid = new CustomTimer(300000);
+
+        private CustomTimer test = new CustomTimer(300000);
 
         private string prefix = string.Empty;
 
@@ -51,6 +54,8 @@ namespace OakBot.ViewModel
 
             // Set references to services
             this.chat = chat; // Twitch chat service
+
+            Channel = chat.GetChannelName();
 
             // Register to events
             this.chat.RawMessageReceived += _chat_RawMessageReceived;
@@ -90,6 +95,8 @@ namespace OakBot.ViewModel
                 if (e.ChatMessage.NoticeType == NoticeMessageType.Sub || e.ChatMessage.NoticeType == NoticeMessageType.Resub || e.ChatMessage.NoticeType == NoticeMessageType.SubGift)
                 {
                     subCount += 1;
+
+                    Console.WriteLine(e.ChatMessage.RawMessage);
                     
                     int tier;
                     var welcomeMessage = string.Empty;
@@ -122,7 +129,7 @@ namespace OakBot.ViewModel
                         case NoticeMessageType.SubGift:
                             Name = e.ChatMessage.GiftRecipientUserName;
                             ID = e.ChatMessage.GiftRecipientUserID;
-                            welcomeMessage = " edeHI Welcome " + Name + ", edeHYPE Thank you for being our " + subCount + " subscriber today!! edeWINK edePIMP edePIMP (Courtesy of " + e.ChatMessage.SubscriptionLogin + ") edeLOVE edeLOVE";
+                            welcomeMessage = " edeHI Welcome " + Name + ", edeHYPE Thank you for being our " + subCount + " subscriber today!! edeWINK edePIMP edePIMP (Courtesy of " + e.ChatMessage.SubscriptionLogin + ", Their " + e.ChatMessage.GiftSenderCount + " Gift)  edeLOVE edeLOVE";
                             break;
                     }
 
@@ -242,16 +249,14 @@ namespace OakBot.ViewModel
 
                 var emotes = e.ChatMessage.UsedEmotes;
 
-                
-
                 if (e.ChatMessage.Message.Contains("miistyDab") || e.ChatMessage.Message.Contains("broD"))
                 {
                     chat.SendMessage("/timeout " + e.ChatMessage.Author + " 1 No Dabbing", false);
                 }
 
-                if (message[0] == "!multi")
+                if (message[0].ToLower() == "!multi")
                 {
-                    if (multi.Contains("Sorry, No"))
+                    if (multi == noMulti)
                     {
                         chat.SendMessage(multi, false);
                     }
@@ -263,7 +268,7 @@ namespace OakBot.ViewModel
                 
                 if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")) || e.ChatMessage.IsSubscriber)
                 {
-                    switch (message[0])
+                    switch (message[0].ToLower())
                     {
                         case "!subs":
                             chat.SendMessage("Subs Today: " + subCount, false);
@@ -281,13 +286,11 @@ namespace OakBot.ViewModel
                             break;                
 
                     }
-                }
-
-                
+                }                
                 
                 if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")))
                 {
-                    switch (message[0])
+                    switch (message[0].ToLower())
                     {
                         case "~set":
                             if (message.Length == 2)
@@ -305,7 +308,7 @@ namespace OakBot.ViewModel
                             break;
 
                         case "!multiadd":
-                            if (multi.Contains("Sorry, No"))
+                            if (multi == noMulti)
                             {
                                 chat.SendMessage("Sorry, No multi to edit right now, use !multiset to set the multi first", false);
                             }
@@ -316,7 +319,7 @@ namespace OakBot.ViewModel
                             break;
 
                         case "!multidel":
-                            if (multi.Contains("Sorry, No"))
+                            if (multi == noMulti)
                             {
                                 chat.SendMessage("Sorry, No multi to edit right now, use !multiset to set the multi first", false);
                             }
@@ -327,18 +330,19 @@ namespace OakBot.ViewModel
                             break;
 
                         case "!multimsg":
-                            if (multi.Contains("Sorry, No"))
+                            if (multi == noMulti)
                             {
                                 chat.SendMessage("Sorry, No multi to edit right now, use !multiset to set the multi first", false);
                             }
                             else
                             {
                                 multiMessage = string.Join(" ", message.Select(i => i.Trim()).Skip(1));
-                                chat.SendMessage("Changed edeGOOD", false);
+                                chat.SendMessage("Message Changed edeGOOD", false);
                             }
                             break;
+
                         case "!multiclear":
-                            if (multi.Contains("Sorry, No"))
+                            if (multi == noMulti)
                             {
                                 chat.SendMessage("Already Cleared edeBRUH", false);
                             }
@@ -347,6 +351,18 @@ namespace OakBot.ViewModel
                                 multi = noMulti;
                                 chat.SendMessage("Multi Cleared edeANGEL", false);
                             }
+                            break;
+
+                        case "~reset":
+                            test.Reset();
+                            break;
+
+                        case "~tstart":
+                            test.Start();
+                            break;
+
+                        case "~time":
+                            chat.SendMessage(test.GetTimeLeft(), false);
                             break;
                     }
                 }
@@ -434,18 +450,16 @@ namespace OakBot.ViewModel
                 }
 
                 chat.SendMessage("Multi Set edeGOOD", false);
+
                 if (dups > 0)
                 {
-                    chat.SendMessage(dups + " Duplicate casters not added edeWINK", false);
+                    chat.SendMessage(dups + " Duplicate caster(s) not added edeWINK", false);
                 }
             }
             else
             {
                 chat.SendMessage("Please enter a caster name to set multi edeBRUH", false);
-            }
-
-            
-            
+            }     
         }
 
         private void AddMulti(string[] m)
@@ -526,18 +540,17 @@ namespace OakBot.ViewModel
                     }
                 }
 
-                chat.SendMessage("Multi Set edeGOOD", false);
+                chat.SendMessage("Caster(s) added edeGOOD", false);
+
                 if (dups > 0)
                 {
-                    chat.SendMessage(dups + " Duplicate casters not added edeWINK", false);
+                    chat.SendMessage(dups + " Duplicate caster(s) not added edeWINK", false);
                 }
             }
             else
             {
                 chat.SendMessage("Please enter a caster name to add to multi edeBRUH", false);
-            }
-
-            
+            }            
         }
 
         private void DelMulti(string[] m)
@@ -617,13 +630,12 @@ namespace OakBot.ViewModel
                     }
                 }
 
-                chat.SendMessage("Removed edeFEELS ", false);
+                chat.SendMessage("Caster(s) Removed edeFEELS ", false);
             }
             else
             {
                 chat.SendMessage("Please enter a caster name to remove from multi edeBRUH", false);
-            }
-            
+            }            
         }
 
         private void AddSub(Sub newSub) => svc.Add(newSub);
@@ -639,8 +651,6 @@ namespace OakBot.ViewModel
         private void TrainWarnElapsedAction(object sender, ElapsedEventArgs e) => chat.SendMessage("Two minutes until the edeTRAIN departs!!", false);
 
         private void RaidElapsedAction(object sender, ElapsedEventArgs e) => chat.SendMessage("/followers 5m", false);
-
-
 
         /// <summary>
         /// Shutdown message handler, handle shutdown.
