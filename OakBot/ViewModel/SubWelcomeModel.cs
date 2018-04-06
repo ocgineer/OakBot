@@ -13,10 +13,9 @@ namespace OakBot.ViewModel
 {
     public class SubWelcomeModel : ViewModelBase
     {
-        /// <summary>
-        /// Train File Location and Database File Location
-        /// </summary>
+        #region Fields
 
+        /// Train File Location and Database File Location
         private static readonly string DBFILE = "Data Source= " + Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\OakBot\\DB\\MainDB.db;Version=3;";
         private static readonly string TRAINFILE = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\OakBot\\Bin";
 
@@ -42,11 +41,13 @@ namespace OakBot.ViewModel
         private int trainDayHigh = 0;
         private int trainHigh = 0;
 
-        private const string mLink = "https://multi.raredrop.co/tedemonster";
+        private const string mLink = "https://multi.raredrop.co/";
         private const string noMulti = "Sorry, No Multi Right Now";
         private string multi = noMulti;
         private string multiMessage = "Watch EdE and Friends Here:";
+        #endregion
 
+        #region Constructors
         public SubWelcomeModel(IChatConnectionService chat)
         {
             // Register to the shutdown notification
@@ -55,7 +56,7 @@ namespace OakBot.ViewModel
             // Set references to services
             this.chat = chat; // Twitch chat service
 
-            Channel = chat.GetChannelName();
+            
 
             // Register to events
             this.chat.RawMessageReceived += _chat_RawMessageReceived;
@@ -82,13 +83,175 @@ namespace OakBot.ViewModel
             trainHigh = Convert.ToInt32(tr.ReadLine());
             tr.Close();
     }
+        #endregion        
 
-        /// <summary>
+        #region Private Methods
+        private void SetMulti(string[] m)
+        {
+            var dups = 0;
+            var serv = "t";
+            if (m.Length >= 2)
+            {
+                var i = 1;
+
+                multi = mLink + serv + chat.GetChannelName();
+
+                while (i < m.Length)
+                {
+                    switch (m[i].ToLower())
+                    {
+                        case "twitch": serv = "t"; i += 1; break;
+                        case "facebook": serv = "f"; i += 1; break;
+                        case "mixer": serv = "m"; i += 1; break;
+                        case "youtube": serv = "y"; i += 1; break;
+                        case "smashcast": serv = "sc"; i += 1; break;
+                        case "streamme": serv = "sm"; i += 1; break;
+                        case "douyu": serv = "d"; i += 1; break;
+                        case "chew": serv = "c"; i += 1; break;
+                        case "liveedu": serv = "l"; i += 1; break;
+                        case "mobcrush": serv = "M"; i += 1; break;
+                        case "gg": serv = "g"; i += 1; break;
+                        case "ustream": serv = "u"; i += 1; break;
+                        case "cybertv": serv = "C"; i += 1; break;                        
+                    }
+
+                    if (!multi.Contains(m[i].ToLower()))
+                    {
+                        multi += "/" + serv + m[i].ToLower();
+                        i += 1;
+                    }
+                    else
+                    {
+                        dups += 1;
+                        i += 1;
+                    }
+                }
+
+                chat.SendMessage("Multi Set edeGOOD", false);
+
+                if (dups > 0)
+                {
+                    chat.SendMessage(dups + " Duplicate caster(s) not added edeWINK", false);
+                }
+            }
+            else
+            {
+                chat.SendMessage("Please enter a caster name to set multi edeBRUH", false);
+            }     
+        }
+
+        private void AddMulti(string[] m)
+        {
+            var dups = 0;
+            var serv = "t";
+            if (m.Length >= 2)
+            {
+                var i = 1;     
+
+                while (i < m.Length)
+                {
+                    switch (m[i].ToLower())
+                    {
+                        case "twitch": serv = "t"; i += 1; break;
+                        case "facebook": serv = "f"; i += 1; break;
+                        case "mixer": serv = "m"; i += 1; break;
+                        case "youtube": serv = "y"; i += 1; break;
+                        case "smashcast": serv = "sc"; i += 1; break;
+                        case "streamme": serv = "sm"; i += 1; break;
+                        case "douyu": serv = "d"; i += 1; break;
+                        case "chew": serv = "c"; i += 1; break;
+                        case "liveedu": serv = "l"; i += 1; break;
+                        case "mobcrush": serv = "M"; i += 1; break;
+                        case "gg": serv = "g"; i += 1; break;
+                        case "ustream": serv = "u"; i += 1; break;
+                        case "cybertv": serv = "C"; i += 1; break;
+                    }
+
+                    if (!multi.Contains(m[i].ToLower()))
+                    {
+                        multi += "/" + serv + m[i].ToLower();
+                        i += 1;
+                    }
+                    else
+                    {
+                        dups += 1;
+                        i += 1;
+                    }
+                }
+
+                chat.SendMessage("Caster(s) added edeGOOD", false);
+
+                if (dups > 0)
+                {
+                    chat.SendMessage(dups + " Duplicate caster(s) not added edeWINK", false);
+                }
+            }
+            else
+            {
+                chat.SendMessage("Please enter a caster name to add to multi edeBRUH", false);
+            }            
+        }
+
+        private void DelMulti(string[] m)
+        {
+            var serv = "t";
+            if (m.Length >= 2)
+            {
+                var i = 1;
+
+                while (i < m.Length)
+                {
+                    switch (m[i].ToLower())
+                    {
+                        case "twitch": serv = "t"; i += 1; break;
+                        case "facebook": serv = "f"; i += 1; break;
+                        case "mixer": serv = "m"; i += 1; break;
+                        case "youtube": serv = "y"; i += 1; break;
+                        case "smashcast": serv = "sc"; i += 1; break;
+                        case "streamme": serv = "sm"; i += 1; break;
+                        case "douyu": serv = "d"; i += 1; break;
+                        case "chew": serv = "c"; i += 1; break;
+                        case "liveedu": serv = "l"; i += 1; break;
+                        case "mobcrush": serv = "M"; i += 1; break;
+                        case "gg": serv = "g"; i += 1; break;
+                        case "ustream": serv = "u"; i += 1; break;
+                        case "cybertv": serv = "C"; i += 1; break;
+                    }
+
+                    if (m[i].ToLower() == chat.GetChannelName())
+                    {
+                        chat.SendMessage("Cannot remove channel name from multi link edeBRUH", false);
+                        i += 1;
+                    }
+                    else
+                    {
+                        multi = multi.Replace("/" + serv + m[i].ToLower(), "");
+                        i += 1;
+                    }
+                }
+
+                chat.SendMessage("Caster(s) Removed edeFEELS ", false);
+            }
+            else
+            {
+                chat.SendMessage("Please enter a caster name to remove from multi edeBRUH", false);
+            }            
+        }
+
+        private void AddSub(Sub newSub) => svc.Add(newSub);
+
+        private void UpdateSub(Sub existingSub) => svc.Update(existingSub);
+
+        private Sub GetSub(string id) => svc.GetById(id);
+
+        private bool IsSub(string id) => string.IsNullOrEmpty((svc.GetById(id)).Name) ? false : true;
+        #endregion
+
+        #region Events
         /// Raw Message received event handler, fired on every IRC message received.
-        /// </summary>
         private void _chat_RawMessageReceived(object sender, ChatConnectionMessageReceivedEventArgs e)
         {
-
+            #region UserNotice
             // raw message UserNotice
             if (e.ChatMessage.Command == IrcCommand.UserNotice)
             {
@@ -97,7 +260,7 @@ namespace OakBot.ViewModel
                     subCount += 1;
 
                     Console.WriteLine(e.ChatMessage.RawMessage);
-                    
+
                     int tier;
                     var welcomeMessage = string.Empty;
                     var ID = e.ChatMessage.UserId;
@@ -241,7 +404,9 @@ namespace OakBot.ViewModel
 
                 }
             }
+            #endregion
 
+            #region PrivMsg
             // normal chat message
             if (e.ChatMessage.Command == IrcCommand.PrivMsg)
             {
@@ -265,7 +430,7 @@ namespace OakBot.ViewModel
                         chat.SendMessage(multiMessage + " " + multi + "/Lcolumns", false);
                     }
                 }
-                
+
                 if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")) || e.ChatMessage.IsSubscriber)
                 {
                     switch (message[0].ToLower())
@@ -283,11 +448,11 @@ namespace OakBot.ViewModel
                             {
                                 chat.SendMessage("The edeTRAIN has not arrived yet!!", false);
                             }
-                            break;                
+                            break;
 
                     }
-                }                
-                
+                }
+
                 if (e.ChatMessage.IsModerator || e.ChatMessage.Badges.Exists(x => x.Contains("broadcaster")))
                 {
                     switch (message[0].ToLower())
@@ -304,7 +469,7 @@ namespace OakBot.ViewModel
                             break;
 
                         case "!multiset":
-                            SetMulti(message);                            
+                            SetMulti(message);
                             break;
 
                         case "!multiadd":
@@ -364,287 +529,15 @@ namespace OakBot.ViewModel
                         case "~time":
                             chat.SendMessage(test.GetTimeLeft(), false);
                             break;
+
+                        case "~test":
+                            chat.SendMessage(chat.GetChannelName(), false);
+                            break;
                     }
                 }
             }
+            #endregion
         }
-
-        private void SetMulti(string[] m)
-        {
-            var dups = 0;
-            var serv = "t";
-            if (m.Length >= 2)
-            {
-                var i = 1;
-
-                multi = mLink;
-
-                while (i < m.Length)
-                {
-                    switch (m[i].ToLower())
-                    {
-                        case "twitch":
-                            serv = "t";
-                            i += 1;
-                            break;
-                        case "facebook":
-                            serv = "f";
-                            i += 1;
-                            break;
-                        case "mixer":
-                            serv = "m";
-                            i += 1;
-                            break;
-                        case "youtube":
-                            serv = "y";
-                            i += 1;
-                            break;
-                        case "smashcast":
-                            serv = "sc";
-                            i += 1;
-                            break;
-                        case "streamme":
-                            serv = "sm";
-                            i += 1;
-                            break;
-                        case "douyu":
-                            serv = "d";
-                            i += 1;
-                            break;
-                        case "chew":
-                            serv = "c";
-                            i += 1;
-                            break;
-                        case "liveedu":
-                            serv = "l";
-                            i += 1;
-                            break;
-                        case "mobcrush":
-                            serv = "M";
-                            i += 1;
-                            break;
-                        case "gg":
-                            serv = "g";
-                            i += 1;
-                            break;
-                        case "ustream":
-                            serv = "u";
-                            i += 1;
-                            break;
-                        case "cybertv":
-                            serv = "C";
-                            i += 1;
-                            break;                        
-                    }
-
-                    if (!multi.Contains(m[i].ToLower()))
-                    {
-                        multi += "/" + serv + m[i].ToLower();
-                        i += 1;
-                    }
-                    else
-                    {
-                        dups += 1;
-                        i += 1;
-                    }
-                }
-
-                chat.SendMessage("Multi Set edeGOOD", false);
-
-                if (dups > 0)
-                {
-                    chat.SendMessage(dups + " Duplicate caster(s) not added edeWINK", false);
-                }
-            }
-            else
-            {
-                chat.SendMessage("Please enter a caster name to set multi edeBRUH", false);
-            }     
-        }
-
-        private void AddMulti(string[] m)
-        {
-            var dups = 0;
-            var serv = "t";
-            if (m.Length >= 2)
-            {
-                var i = 1;     
-
-                while (i < m.Length)
-                {
-                    switch (m[i].ToLower())
-                    {
-                        case "twitch":
-                            serv = "t";
-                            i += 1;
-                            break;
-                        case "facebook":
-                            serv = "f";
-                            i += 1;
-                            break;
-                        case "mixer":
-                            serv = "m";
-                            i += 1;
-                            break;
-                        case "youtube":
-                            serv = "y";
-                            i += 1;
-                            break;
-                        case "smashcast":
-                            serv = "sc";
-                            i += 1;
-                            break;
-                        case "streamme":
-                            serv = "sm";
-                            i += 1;
-                            break;
-                        case "douyu":
-                            serv = "c";
-                            i += 1;
-                            break;
-                        case "chew":
-                            serv = "d";
-                            i += 1;
-                            break;
-                        case "liveedu":
-                            serv = "l";
-                            i += 1;
-                            break;
-                        case "mobcrush":
-                            serv = "M";
-                            i += 1;
-                            break;
-                        case "gg":
-                            serv = "g";
-                            i += 1;
-                            break;
-                        case "ustream":
-                            serv = "u";
-                            i += 1;
-                            break;
-                        case "cybertv":
-                            serv = "C";
-                            i += 1;
-                            break;                        
-                    }
-
-                    if (!multi.Contains(m[i].ToLower()))
-                    {
-                        multi += "/" + serv + m[i].ToLower();
-                        i += 1;
-                    }
-                    else
-                    {
-                        dups += 1;
-                        i += 1;
-                    }
-                }
-
-                chat.SendMessage("Caster(s) added edeGOOD", false);
-
-                if (dups > 0)
-                {
-                    chat.SendMessage(dups + " Duplicate caster(s) not added edeWINK", false);
-                }
-            }
-            else
-            {
-                chat.SendMessage("Please enter a caster name to add to multi edeBRUH", false);
-            }            
-        }
-
-        private void DelMulti(string[] m)
-        {
-            var serv = "t";
-            if (m.Length >= 2)
-            {
-                var i = 1;
-
-                while (i < m.Length)
-                {
-                    switch (m[i].ToLower())
-                    {
-                        case "twitch":
-                            serv = "t";
-                            i += 1;
-                            break;
-                        case "facebook":
-                            serv = "f";
-                            i += 1;
-                            break;
-                        case "mixer":
-                            serv = "m";
-                            i += 1;
-                            break;
-                        case "youtube":
-                            serv = "y";
-                            i += 1;
-                            break;
-                        case "smashcast":
-                            serv = "sc";
-                            i += 1;
-                            break;
-                        case "streamme":
-                            serv = "sm";
-                            i += 1;
-                            break;
-                        case "douyu":
-                            serv = "c";
-                            i += 1;
-                            break;
-                        case "chew":
-                            serv = "d";
-                            i += 1;
-                            break;
-                        case "liveedu":
-                            serv = "l";
-                            i += 1;
-                            break;
-                        case "mobcrush":
-                            serv = "M";
-                            i += 1;
-                            break;
-                        case "gg":
-                            serv = "g";
-                            i += 1;
-                            break;
-                        case "ustream":
-                            serv = "u";
-                            i += 1;
-                            break;
-                        case "cybertv":
-                            serv = "C";
-                            i += 1;
-                            break;                        
-                    }
-
-                    if (m[i].ToLower() == "edemonster")
-                    {
-                        chat.SendMessage("Cannot remove channel name from multi link edeBRUH", false);
-                        i += 1;
-                    }
-                    else
-                    {
-                        multi = multi.Replace("/" + serv + m[i].ToLower(), "");
-                        i += 1;
-                    }
-                }
-
-                chat.SendMessage("Caster(s) Removed edeFEELS ", false);
-            }
-            else
-            {
-                chat.SendMessage("Please enter a caster name to remove from multi edeBRUH", false);
-            }            
-        }
-
-        private void AddSub(Sub newSub) => svc.Add(newSub);
-
-        private void UpdateSub(Sub existingSub) => svc.Update(existingSub);
-
-        private Sub GetSub(string id) => svc.GetById(id);
-
-        private bool IsSub(string id) => string.IsNullOrEmpty((svc.GetById(id)).Name) ? false : true;
 
         private void TrainEndElapsedAction(object sender, ElapsedEventArgs e) => chat.SendMessage("The edeTRAIN has just departed!! edeBRUH", false);
 
@@ -659,5 +552,6 @@ namespace OakBot.ViewModel
         {
             
         }
+        #endregion
     }
 }

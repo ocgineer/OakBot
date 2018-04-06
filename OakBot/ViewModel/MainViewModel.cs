@@ -40,7 +40,8 @@ namespace OakBot.ViewModel
         public MainViewModel(IChatConnectionService ccs, IWebSocketEventService wse,
             ITwitchPubSubService pss)
         {
-            Title = "OakBot - YATB";
+            //Title = "OakBot - YATB";
+            Title = "Kelex";
 
             // Set dependency injection references
             _ccs = ccs;
@@ -75,6 +76,7 @@ namespace OakBot.ViewModel
                 // Set caster credentials
                 if (!string.IsNullOrWhiteSpace(_mainSettings.CasterOauthKey))
                 {
+                    
                     IsCasterOauthSet = true;
                     _casterCredentials = new TwitchCredentials(
                         _mainSettings.CasterUsername, _mainSettings.CasterOauthKey, true);

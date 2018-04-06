@@ -22,12 +22,13 @@ namespace OakBot.ViewModel
         {
             m_dueTime = DateTime.Now.AddMilliseconds(this.Interval);
             base.Start();
+           
         }
 
         public void Reset()
         {
-            base.Stop();
-            base.Start();
+            this.Stop();
+            this.Start();
         }
     }
 }
