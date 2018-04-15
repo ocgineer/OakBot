@@ -109,7 +109,7 @@ namespace OakBot.Model
         public void BroadcastEvent(string eventName, object data)
         {
             // Broadcast payload as json string
-            _server.WebSocketServices["/"]?.Sessions.BroadcastAsync(
+             _server.WebSocketServices["/"]?.Sessions.BroadcastAsync(
                 JsonConvert.SerializeObject(new WebSocketEventPayload(eventName, data)), null);
         }
 

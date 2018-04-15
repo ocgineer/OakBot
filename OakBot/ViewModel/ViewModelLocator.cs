@@ -7,14 +7,13 @@
   
   In the View:
   DataContext="{Binding Source={StaticResource Locator}, Path=ViewModelName}"
-
   You can also use Blend to do all this with the tool's support.
   See http://www.galasoft.ch/mvvm
 */
 
+using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
-using Microsoft.Practices.ServiceLocation;
 
 using OakBot.Model;
 
@@ -54,6 +53,11 @@ namespace OakBot.ViewModel
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<ConsoleViewModel>();
             SimpleIoc.Default.Register<GiveawaysViewModel>();
+
+
+            // Register ViewModels create instance Immediately as no view is using them yet
+            SimpleIoc.Default.Register<SubWelcomeModel>(true);
+            SimpleIoc.Default.Register<BDayModel>(true);
         }
 
         public MainViewModel Main
@@ -85,6 +89,22 @@ namespace OakBot.ViewModel
             get
             {
                 return ServiceLocator.Current.GetInstance<GiveawaysViewModel>();
+            }
+        }
+
+        public SubWelcomeModel SubWelcome
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<SubWelcomeModel>();
+            }
+        }
+
+        public BDayModel BDay
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<BDayModel>();
             }
         }
 

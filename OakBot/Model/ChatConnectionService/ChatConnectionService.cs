@@ -79,6 +79,12 @@ namespace OakBot.Model
             }
         }
 
+        public string GetChannelName()
+        {
+            var channel = _channel;
+            return channel;
+        }
+
         public void Connect(bool isCaster)
         {
             if (string.IsNullOrWhiteSpace(_channel))

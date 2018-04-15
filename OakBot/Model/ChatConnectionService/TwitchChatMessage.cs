@@ -257,7 +257,9 @@ namespace OakBot.Model
                                 // USERSNOTICE msg-id tag
                                 case "sub": NoticeType = NoticeMessageType.Sub; break;
                                 case "resub": NoticeType = NoticeMessageType.Resub; break;
-                                case "charity": NoticeType = NoticeMessageType.Charity; break;
+                                case "subgift": NoticeType = NoticeMessageType.SubGift; break;
+                                case "ritual": NoticeType = NoticeMessageType.Ritual; break;
+                                case "raid": NoticeType = NoticeMessageType.Raid; break;
                             }
                             break;
                 
@@ -287,6 +289,33 @@ namespace OakBot.Model
                         case "system-msg":
                             SubscriptionSystemMessage = tag.Groups["value"].Value.Replace(@"\s", " ");
                             break;
+
+                        // USERNOTICE SubGift Tags
+                        case "msg-param-recipient-display-name":
+                            GiftRecipientDisplayName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-recipient-user-name":
+                            GiftRecipientUserName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-recipient-id":
+                            GiftRecipientUserID = tag.Groups["value"].Value; break;
+
+                        case "msg-param-sender-count":
+                            GiftSenderCount = tag.Groups["value"].Value; break;
+
+                        // USERNOTICE Raid tags
+                        case "msg-param-displayName":
+                            RaidDisplayName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-login":
+                            RaidUserName = tag.Groups["value"].Value; break;
+
+                        case "msg-param-viewerCount":
+                            RaidCount = tag.Groups["value"].Value; break;
+
+                        // USERNOTICE Ritual Tags
+                        case "msg-param-ritual-name":
+                            NewUser = tag.Groups["value"].Value; break;
                     }
                 }
 
@@ -415,6 +444,34 @@ namespace OakBot.Model
         /// Channel Id of the channel the message was send in.
         /// </summary>
         public string ChannelId { get; private set; }
+
+        /// <summary>
+        /// Displaynme, UserName, and UserID of Recipient for A sub gift the sender goes to Normal values
+        /// </summary>
+        public string GiftRecipientDisplayName { get; private set; }
+
+        public string GiftRecipientUserName { get; private set; }
+
+        public string GiftRecipientUserID { get; private set; }
+
+        ///<summary>
+        /// Number of times user has gifted a sub
+        /// </summary>
+        public string GiftSenderCount { get; private set; }
+
+        /// <summary>
+        /// Name of channel and Number of Viewers for a Raid
+        /// </summary>
+        public string RaidUserName { get; private set; }
+
+        public string RaidDisplayName { get; private set; }
+
+        public string RaidCount { get; private set; }
+
+        /// <summary>
+        /// Name of New Chatter
+        /// </summary>
+        public string NewUser { get; private set; }
 
         #endregion
 

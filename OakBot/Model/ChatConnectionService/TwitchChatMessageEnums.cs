@@ -75,7 +75,9 @@
         // USERNOTICE Types
         Sub,
         Resub,
-        Charity
+        SubGift,
+        Raid,
+        Ritual
     }
 
     /// <summary>

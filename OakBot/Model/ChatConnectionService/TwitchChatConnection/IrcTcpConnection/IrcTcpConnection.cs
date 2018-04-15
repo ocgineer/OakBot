@@ -338,6 +338,7 @@ namespace OakBot.Model
                 else
                 {
                     // Apply a small sleep
+
                     Thread.Sleep(1);
                 }  
             }
